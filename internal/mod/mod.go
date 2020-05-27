@@ -6,7 +6,12 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/AlecAivazis/survey/v2"
 	"github.com/olekukonko/tablewriter"
+)
+
+const (
+	surveyPageSize = 10
 )
 
 // Module holds information about a specific module
@@ -41,6 +46,33 @@ func (m Module) NewModule() string {
 	return fmt.Sprintf("%s@%s", mod.Update.Path, mod.Update.Version)
 }
 
+// String returns the path and version of current module
+func (m Module) String() string {
+	return fmt.Sprintf("%s@%s", m.Path, m.Version)
+}
+
+// SelectCLI allows interactively select modules to update
+func (mds *Modules) SelectCLI() error {
+	prompt := &survey.MultiSelect{
+		Message:  "Choose which modules to update",
+		Options:  mds.surveyOptions(),
+		PageSize: surveyPageSize,
+	}
+
+	var chs []int
+	if err := survey.AskOne(prompt, &chs); err != nil {
+		return err
+	}
+
+	var sltMds Modules
+	for _, n := range chs {
+		sltMds = append(sltMds, (*mds)[n])
+	}
+	*mds = sltMds
+
+	return nil
+}
+
 // ToTable generates a table for CLI
 func (mds Modules) ToTable() string {
 	var wrt bytes.Buffer
@@ -58,6 +90,14 @@ func (mds Modules) ToTable() string {
 	tbl.Render()
 
 	return wrt.String()
+}
+
+func (mds Modules) surveyOptions() []string {
+	var ops []string
+	for _, m := range mds {
+		ops = append(ops, fmt.Sprintf("%s %s -> %s", m.Path, m.Version, m.newVersion()))
+	}
+	return ops
 }
 
 // newVersion returns the version of the update taking in account any Replace settings

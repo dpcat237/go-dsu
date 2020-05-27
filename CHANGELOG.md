@@ -2,6 +2,7 @@
 
 #### Features
 - Implement update of only direct modules
+- Allow select interactively direct modules to update
 
 # v0.2.0 (2020.05.27)
 

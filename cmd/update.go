@@ -26,17 +26,21 @@ func init() {
 	rootCmd.AddCommand(updateCmd)
 	updateCmd.Flags().Bool("dev", false, "Development mode")
 	updateCmd.Flags().BoolP("indirect", "i", false, "Update all direct and indirect modules")
+	updateCmd.Flags().BoolP("select", "s", false, "Select direct modules to update")
 }
 
 func update(cmd *cobra.Command) {
 	md := output.ModeProd
-	var ind bool
+	var ind, scl bool
 
 	if cmd.Flag("dev").Value.String() == "true" {
 		md = output.ModeDev
 	}
 	if cmd.Flag("indirect").Value.String() == "true" {
 		ind = true
+	}
+	if cmd.Flag("select").Value.String() == "true" {
+		scl = true
 	}
 
 	if out := checkPrerequisites(); out.HasError() {
@@ -51,6 +55,6 @@ func update(cmd *cobra.Command) {
 	}
 
 	upd := updater.Init(exc)
-	out = upd.UpdateDependencies(ind)
+	out = upd.UpdateDependencies(ind, scl)
 	fmt.Println(out.ToString(md))
 }

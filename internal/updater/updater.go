@@ -67,7 +67,7 @@ func (upd Updater) Preview() output.Output {
 }
 
 // UpdateDependencies clean and update dependencies
-func (upd Updater) UpdateDependencies(all bool) output.Output {
+func (upd Updater) UpdateDependencies(all, sct bool) output.Output {
 	out := output.Create(pkg + ".UpdateDependencies")
 
 	if outCln := upd.Clean(); outCln.HasError() {
@@ -84,6 +84,12 @@ func (upd Updater) UpdateDependencies(all bool) output.Output {
 
 	if all {
 		return upd.updateAll()
+	}
+
+	if sct {
+		if err := mds.SelectCLI(); err != nil {
+			return out.WithErrorString("Error rendering modules selector")
+		}
 	}
 
 	return upd.updateDirect(mds)
