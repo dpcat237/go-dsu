@@ -5,6 +5,9 @@ import (
 	"os"
 
 	"github.com/spf13/cobra"
+
+	"github.com/dpcat237/go-dsu/internal/httputil"
+	"github.com/dpcat237/go-dsu/internal/output"
 )
 
 var rootCmd = &cobra.Command{
@@ -18,4 +21,13 @@ func Execute() {
 		fmt.Println(err)
 		os.Exit(1)
 	}
+}
+
+func checkPrerequisites() output.Output {
+	out := output.Create("cmd.checkPrerequisites")
+
+	if !httputil.IsConnection() {
+		return out.WithErrorString("Check your Internet connection")
+	}
+	return out
 }

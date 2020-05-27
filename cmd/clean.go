@@ -12,22 +12,22 @@ import (
 )
 
 var (
-	updateCmd = &cobra.Command{
-		Use:   "update",
-		Short: "Update modules",
-		Long:  `Add missing and remove unused modules. Update modules`,
+	cleanCmd = &cobra.Command{
+		Use:   "clean",
+		Short: "Clean modules",
+		Long:  `Adds missing and remove unused modules`,
 		Run: func(cmd *cobra.Command, args []string) {
-			update(cmd)
+			clean(cmd)
 		},
 	}
 )
 
 func init() {
-	rootCmd.AddCommand(updateCmd)
-	updateCmd.Flags().Bool("dev", false, "Development mode")
+	rootCmd.AddCommand(cleanCmd)
+	cleanCmd.Flags().Bool("dev", false, "Development mode")
 }
 
-func update(cmd *cobra.Command) {
+func clean(cmd *cobra.Command) {
 	md := output.ModeProd
 	if cmd.Flag("dev").Value.String() == "true" {
 		md = output.ModeDev
@@ -45,6 +45,6 @@ func update(cmd *cobra.Command) {
 	}
 
 	upd := updater.Init(exc)
-	out = upd.UpdateDependencies(true)
+	out = upd.Clean()
 	fmt.Println(out.ToString(md))
 }

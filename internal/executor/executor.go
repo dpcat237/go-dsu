@@ -35,9 +35,29 @@ func Init() (*Executor, output.Output) {
 	return &exc, out
 }
 
-// Exec executes requested command and returns STD output and error.
-func (exc Executor) Exec(atr string) (string, string, output.Output) {
-	out := output.Create(pkg + ".exec")
+// ExecToBytes executes requested command and returns STD output and error as bytes.
+func (exc Executor) ExecToBytes(atr string) ([]byte, []byte, output.Output) {
+	out := output.Create(pkg + ".ExecToBytes")
+
+	cmdOut, cmdErr, err := exc.exec(atr)
+	if err != nil {
+		return []byte{}, []byte{}, out.WithError(err)
+	}
+	return cmdOut.Bytes(), cmdErr.Bytes(), out
+}
+
+// ExecToString executes requested command and returns STD output and error as string.
+func (exc Executor) ExecToString(atr string) (string, string, output.Output) {
+	out := output.Create(pkg + ".ExecToString")
+
+	cmdOut, cmdErr, err := exc.exec(atr)
+	if err != nil {
+		return "", "", out.WithError(err)
+	}
+	return cmdOut.String(), cmdErr.String(), out
+}
+
+func (exc Executor) exec(atr string) (bytes.Buffer, bytes.Buffer, error) {
 	var cmdOut, cmdErr bytes.Buffer
 	cmdStr := fmt.Sprintf("(cd %s/ && %s %s)", exc.projectPath, exc.goPath, atr)
 
@@ -46,8 +66,5 @@ func (exc Executor) Exec(atr string) (string, string, output.Output) {
 	cmd.Stdout = &cmdOut
 	cmd.Stderr = &cmdErr
 
-	if err := cmd.Run(); err != nil {
-		return "", "", out.WithError(err)
-	}
-	return cmdOut.String(), cmdErr.String(), out
+	return cmdOut, cmdErr, cmd.Run()
 }

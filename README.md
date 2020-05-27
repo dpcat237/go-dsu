@@ -2,35 +2,36 @@
 
 ## Overview
 
-Go DSU - provides tools to update Go dependencies with more control than default Go modules.
+Go DSU - provides tools to update Go direct dependencies with more control than default Go modules.
 
-### Implemented
+### Implement for first stable version
 - [x] Simple updater
-- [ ] Check internet connection before starting a process
-- [ ] Return table with available updates
+- [x] Return table with available updates
 - [ ] Run local tests before and after update of each dependency with rollback if tests fail
 - [ ] Run tests of dependencies
 - [ ] Check if license of dependencies changed
 - [ ] Check if in dependency changed contract of implemented interface / method
+- [ ] List license of all dependencies
+- [ ] Cover with tests at least all main functions
 
 ## Installation
-
-**Ensure Go modules are enabled: GO111MODULE=on and go/bin is in your PATH variable.**
 
     go get github.com/dpcat237/go-dsu
 
 ## Usage
 
 ```
-$ go run main.go             
+$ go-dsu
 Go DSU - provides tools to update Go dependencies with more control than default Go modules.
 
 Usage:
   go-dsu [command]
 
 Available Commands:
+  clean       Clean modules
   help        Help about any command
-  update      Update dependencies
+  preview     Preview updates
+  update      Update modules
 
 Flags:
   -h, --help   help for go-dsu

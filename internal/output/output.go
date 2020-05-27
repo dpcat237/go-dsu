@@ -25,6 +25,10 @@ func Create(mtd string) Output {
 	}
 }
 
+func (out Output) GetError() error {
+	return out.error
+}
+
 func (out Output) HasError() bool {
 	return out.error != nil
 }
@@ -42,6 +46,11 @@ func (out Output) ToString(md Mode) string {
 
 func (out Output) WithError(err error) Output {
 	out.error = err
+	return out
+}
+
+func (out Output) WithErrorPrefix(msg string) Output {
+	out.error = fmt.Errorf("%s: \n%s", msg, out.error)
 	return out
 }
 
