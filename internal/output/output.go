@@ -14,6 +14,7 @@ const (
 type Output struct {
 	error    error
 	method   string
+	pid      int
 	response string
 }
 
@@ -29,8 +30,16 @@ func (out Output) GetError() error {
 	return out.error
 }
 
+func (out Output) GetPid() int {
+	return out.pid
+}
+
 func (out Output) HasError() bool {
 	return out.error != nil
+}
+
+func (out *Output) SetPid(pid int) {
+	out.pid = pid
 }
 
 func (out Output) ToString(md Mode) string {

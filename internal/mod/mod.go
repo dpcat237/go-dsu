@@ -2,6 +2,7 @@ package mod
 
 import (
 	"bytes"
+	"fmt"
 	"strconv"
 	"time"
 
@@ -31,6 +32,15 @@ type ModuleError struct {
 	Err string
 }
 
+// NewModule returns the path and version of the update taking in account any Replace settings
+func (m Module) NewModule() string {
+	mod := m
+	if m.Replace != nil && m.Replace.Update != nil {
+		mod = *m.Replace
+	}
+	return fmt.Sprintf("%s@%s", mod.Update.Path, mod.Update.Version)
+}
+
 // ToTable generates a table for CLI
 func (mds Modules) ToTable() string {
 	var wrt bytes.Buffer
@@ -40,7 +50,7 @@ func (mds Modules) ToTable() string {
 	for _, m := range mds {
 		tbl.Append([]string{
 			m.Path,
-			m.currentVersion(),
+			m.Version,
 			m.newVersion(),
 			strconv.FormatBool(!m.Indirect),
 		})
@@ -48,14 +58,6 @@ func (mds Modules) ToTable() string {
 	tbl.Render()
 
 	return wrt.String()
-}
-
-// currentVersion returns the current version of the module taking in account any Replace settings
-func (m Module) currentVersion() string {
-	if m.Replace != nil {
-		return m.Replace.Version
-	}
-	return m.Version
 }
 
 // newVersion returns the version of the update taking in account any Replace settings

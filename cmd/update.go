@@ -15,7 +15,7 @@ var (
 	updateCmd = &cobra.Command{
 		Use:   "update",
 		Short: "Update modules",
-		Long:  `Add missing and remove unused modules. Update modules`,
+		Long:  `Add missing and remove unused modules. Update direct modules`,
 		Run: func(cmd *cobra.Command, args []string) {
 			update(cmd)
 		},
@@ -25,12 +25,18 @@ var (
 func init() {
 	rootCmd.AddCommand(updateCmd)
 	updateCmd.Flags().Bool("dev", false, "Development mode")
+	updateCmd.Flags().BoolP("indirect", "i", false, "Update all direct and indirect modules")
 }
 
 func update(cmd *cobra.Command) {
 	md := output.ModeProd
+	var ind bool
+
 	if cmd.Flag("dev").Value.String() == "true" {
 		md = output.ModeDev
+	}
+	if cmd.Flag("indirect").Value.String() == "true" {
+		ind = true
 	}
 
 	if out := checkPrerequisites(); out.HasError() {
@@ -45,6 +51,6 @@ func update(cmd *cobra.Command) {
 	}
 
 	upd := updater.Init(exc)
-	out = upd.UpdateDependencies(true)
+	out = upd.UpdateDependencies(ind)
 	fmt.Println(out.ToString(md))
 }

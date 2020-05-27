@@ -1,10 +1,15 @@
-# 0.2.0 (2020.05.27)
+# v0.3.0 (2020.05.27)
+
+#### Features
+- Implement update of only direct modules
+
+# v0.2.0 (2020.05.27)
 
 #### Features
 - Check internet connection before starting the update process
 - Implement clean and preview as separate commands
 
-# 0.1.0 (2020.05.26)
+# v0.1.0 (2020.05.26)
 
 #### Features
 - Implement command to add missing, remove unused and update modules

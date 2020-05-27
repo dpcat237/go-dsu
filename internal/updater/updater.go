@@ -12,11 +12,13 @@ import (
 )
 
 const (
-	cmdGetUpdate    = "get -u -t"
-	cmdListModules  = "list -u -m -mod=mod -json all"
-	cmdModTidyClean = "mod tidy"
+	cmdGetUpdate   = "get -u -t"
+	cmdListModules = "list -u -m -mod=mod -json all"
+	cmdModTidy     = "mod tidy"
+	cmdModVendor   = "mod vendor"
 
-	pkg = "updater"
+	pkg          = "updater"
+	vendorFolder = "vendor"
 )
 
 type Updater struct {
@@ -33,12 +35,13 @@ func Init(exc *executor.Executor) *Updater {
 func (upd Updater) Clean() output.Output {
 	out := output.Create(pkg + ".Clean")
 
-	_, excErr, cmdOut := upd.exc.ExecToString(cmdModTidyClean)
+	excRsp, cmdOut := upd.exc.Exec(cmdModTidy)
 	if cmdOut.HasError() {
 		return cmdOut
 	}
-	if excErr != "" {
-		return out.WithErrorString(excErr)
+	if excRsp.HasError() {
+		out.SetPid(cmdOut.GetPid())
+		return out.WithErrorString(excRsp.StdErrorString())
 	}
 
 	return out.WithResponse("Mod clean")
@@ -71,11 +74,19 @@ func (upd Updater) UpdateDependencies(all bool) output.Output {
 		return outCln
 	}
 
+	mds, mdsOut := upd.listAvailable(true)
+	if mdsOut.HasError() {
+		return mdsOut
+	}
+	if len(mds) == 0 {
+		return out.WithResponse("All dependencies up to date")
+	}
+
 	if all {
 		return upd.updateAll()
 	}
 
-	return out
+	return upd.updateDirect(mds)
 }
 
 // listAvailable list modules with available updates
@@ -83,18 +94,18 @@ func (upd Updater) listAvailable(direct bool) (mod.Modules, output.Output) {
 	var mds mod.Modules
 	out := output.Create(pkg + ".listAvailable")
 
-	excOut, excErr, cmdOut := upd.exc.ExecToBytes(cmdListModules)
+	excRsp, cmdOut := upd.exc.Exec(cmdListModules)
 	if cmdOut.HasError() {
 		return mds, cmdOut
 	}
-	if len(excErr) > 0 {
-		return mds, out.WithErrorString(string(excErr))
+	if excRsp.HasError() {
+		return mds, out.WithErrorString(excRsp.StdErrorString())
 	}
-	if len(excOut) == 0 {
+	if excRsp.IsEmpty() {
 		return mds, out.WithErrorString("Not found any dependency")
 	}
 
-	dec := json.NewDecoder(bytes.NewReader(excOut))
+	dec := json.NewDecoder(bytes.NewReader(excRsp.StdOutput))
 	for {
 		var m mod.Module
 		if err := dec.Decode(&m); err != nil {
@@ -117,13 +128,42 @@ func (upd Updater) listAvailable(direct bool) (mod.Modules, output.Output) {
 func (upd Updater) updateAll() output.Output {
 	out := output.Create(pkg + ".updateAll")
 
-	excOut, excErr, cmdOut := upd.exc.ExecToString(cmdGetUpdate)
+	excRsp, cmdOut := upd.exc.Exec(cmdGetUpdate)
 	if cmdOut.HasError() {
 		return cmdOut
 	}
-	if excErr != "" {
-		return out.WithErrorString(excErr)
+	if excRsp.HasError() {
+		return out.WithErrorString(excRsp.StdErrorString())
 	}
 
-	return out.WithResponse(fmt.Sprintf("Successfully updated: \n %s", excOut))
+	return out.WithResponse(fmt.Sprintf("Successfully updated: \n %s", excRsp.StdOutputString()))
+}
+
+// updateDirect updates direct modules
+func (upd Updater) updateDirect(mds mod.Modules) output.Output {
+	out := output.Create(pkg + ".updateAll")
+
+	updateModule := func(m mod.Module, verbose bool) output.Output {
+		out := output.Create(pkg + ".updateModule")
+		excRsp, cmdOut := upd.exc.Exec(fmt.Sprintf("get %s", m.NewModule()))
+		if cmdOut.HasError() {
+			return cmdOut
+		}
+		if excRsp.HasError() {
+			return out.WithErrorString(excRsp.StdErrorString())
+		}
+
+		if verbose {
+			fmt.Printf("Updated %s  ->  %s\n", m, m.NewModule())
+		}
+		return out
+	}
+
+	for _, m := range mds {
+		if mOut := updateModule(m, true); mOut.HasError() {
+			return mOut
+		}
+	}
+
+	return out.WithResponse("Updated successfully")
 }
