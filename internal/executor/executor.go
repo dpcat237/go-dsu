@@ -56,3 +56,11 @@ func (exc Executor) Exec(atr string) (Response, output.Output) {
 
 	return rsp, out
 }
+
+// IsProjectFileExists checks if file/folder of project exists
+func (exc Executor) IsProjectFileExists(pth string) bool {
+	if _, err := os.Stat(fmt.Sprintf("%s/%s", exc.projectPath, pth)); os.IsNotExist(err) {
+		return false
+	}
+	return true
+}

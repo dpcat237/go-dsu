@@ -171,5 +171,16 @@ func (upd Updater) updateDirect(mds mod.Modules) output.Output {
 		}
 	}
 
+	// Add updated modules to vendor folder if it exists
+	if upd.exc.IsProjectFileExists(vendorFolder) {
+		excRsp, cmdOut := upd.exc.Exec(cmdModVendor)
+		if cmdOut.HasError() {
+			return cmdOut
+		}
+		if excRsp.HasError() {
+			return out.WithErrorString(excRsp.StdErrorString())
+		}
+	}
+
 	return out.WithResponse("Updated successfully")
 }

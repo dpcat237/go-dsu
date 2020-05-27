@@ -3,6 +3,7 @@
 #### Features
 - Implement update of only direct modules
 - Allow select interactively direct modules to update
+- Add updated modules to vendor folder if it exists
 
 # v0.2.0 (2020.05.27)
 
