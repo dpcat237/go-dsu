@@ -5,6 +5,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"io/ioutil"
+	"log"
 
 	"github.com/dpcat237/go-dsu/internal/executor"
 	"github.com/dpcat237/go-dsu/internal/mod"
@@ -16,6 +18,7 @@ const (
 	cmdListModules = "list -u -m -mod=mod -json all"
 	cmdModTidy     = "mod tidy"
 	cmdModVendor   = "mod vendor"
+	cmdTestLocal   = "test $(go list ./... | grep -v /vendor/)"
 
 	pkg          = "updater"
 	vendorFolder = "vendor"
@@ -40,7 +43,6 @@ func (upd Updater) Clean() output.Output {
 		return cmdOut
 	}
 	if excRsp.HasError() {
-		out.SetPid(cmdOut.GetPid())
 		return out.WithErrorString(excRsp.StdErrorString())
 	}
 
@@ -66,9 +68,9 @@ func (upd Updater) Preview() output.Output {
 	return out.WithResponse(mds.ToTable())
 }
 
-// UpdateDependencies clean and update dependencies
-func (upd Updater) UpdateDependencies(all, sct bool) output.Output {
-	out := output.Create(pkg + ".UpdateDependencies")
+// UpdateModules clean and update dependencies
+func (upd Updater) UpdateModules(all, sct, tst, vrb bool) output.Output {
+	out := output.Create(pkg + ".UpdateModules")
 
 	if outCln := upd.Clean(); outCln.HasError() {
 		return outCln
@@ -92,7 +94,13 @@ func (upd Updater) UpdateDependencies(all, sct bool) output.Output {
 		}
 	}
 
-	return upd.updateDirect(mds)
+	if tst {
+		if tstOut := upd.runLocalTests(); tstOut.HasError() {
+			return out.WithErrorString("Update aborted because project's tests fail")
+		}
+	}
+
+	return upd.updateDirectModules(mds, tst, vrb)
 }
 
 // listAvailable list modules with available updates
@@ -130,6 +138,43 @@ func (upd Updater) listAvailable(direct bool) (mod.Modules, output.Output) {
 	return mds, out
 }
 
+func (upd Updater) runLocalTests() output.Output {
+	out := output.Create(pkg + ".runLocalTests")
+
+	_, cmdOut := upd.exc.Exec(cmdTestLocal)
+	if cmdOut.HasError() {
+		return cmdOut
+	}
+	return out
+}
+
+func (upd Updater) hasLicense() output.Output {
+	out := output.Create(pkg + ".runLocalTests")
+
+	files, err := ioutil.ReadDir("./")
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	for _, f := range files {
+		fmt.Println(f.Name())
+	}
+
+	return out
+}
+
+func (upd Updater) rollback(m mod.Module) output.Output {
+	out := output.Create(pkg + ".rollback")
+	excRsp, cmdOut := upd.exc.Exec(fmt.Sprintf("get %s", m))
+	if cmdOut.HasError() {
+		return cmdOut
+	}
+	if excRsp.HasError() {
+		return out.WithErrorString(excRsp.StdErrorString())
+	}
+	return out
+}
+
 // updateAll updates direct and indirect modules
 func (upd Updater) updateAll() output.Output {
 	out := output.Create(pkg + ".updateAll")
@@ -145,42 +190,64 @@ func (upd Updater) updateAll() output.Output {
 	return out.WithResponse(fmt.Sprintf("Successfully updated: \n %s", excRsp.StdOutputString()))
 }
 
-// updateDirect updates direct modules
-func (upd Updater) updateDirect(mds mod.Modules) output.Output {
-	out := output.Create(pkg + ".updateAll")
-
-	updateModule := func(m mod.Module, verbose bool) output.Output {
-		out := output.Create(pkg + ".updateModule")
-		excRsp, cmdOut := upd.exc.Exec(fmt.Sprintf("get %s", m.NewModule()))
-		if cmdOut.HasError() {
-			return cmdOut
-		}
-		if excRsp.HasError() {
-			return out.WithErrorString(excRsp.StdErrorString())
-		}
-
-		if verbose {
-			fmt.Printf("Updated %s  ->  %s\n", m, m.NewModule())
-		}
-		return out
+// updateDirectModule updates direct module
+func (upd Updater) updateDirectModule(m mod.Module, tst, vnd, vrb bool) output.Output {
+	out := output.Create(pkg + ".updateModule")
+	excRsp, cmdOut := upd.exc.Exec(fmt.Sprintf("get %s", m.NewModule()))
+	if cmdOut.HasError() {
+		return cmdOut
+	}
+	if excRsp.HasError() {
+		return out.WithErrorString(excRsp.StdErrorString())
 	}
 
+	if tst {
+		if vnd {
+			if out := upd.updateVendor(); out.HasError() {
+				return out
+			}
+		}
+
+		if tstOut := upd.runLocalTests(); tstOut.HasError() {
+			fmt.Printf("Kept %s because with %s failed tests \n", m, m.NewModule())
+			return upd.rollback(m)
+		}
+	}
+
+	if vrb {
+		fmt.Printf("Updated %s  ->  %s\n", m, m.NewModule())
+	}
+	return out
+}
+
+// updateDirectModules updates direct modules
+func (upd Updater) updateDirectModules(mds mod.Modules, tst, vrb bool) output.Output {
+	out := output.Create(pkg + ".updateAll")
+	vnd := upd.exc.IsProjectFileExists(vendorFolder)
+
 	for _, m := range mds {
-		if mOut := updateModule(m, true); mOut.HasError() {
+		if mOut := upd.updateDirectModule(m, tst, vnd, vrb); mOut.HasError() {
 			return mOut
 		}
 	}
 
-	// Add updated modules to vendor folder if it exists
-	if upd.exc.IsProjectFileExists(vendorFolder) {
-		excRsp, cmdOut := upd.exc.Exec(cmdModVendor)
-		if cmdOut.HasError() {
-			return cmdOut
-		}
-		if excRsp.HasError() {
-			return out.WithErrorString(excRsp.StdErrorString())
+	if vnd && !tst {
+		if out := upd.updateVendor(); out.HasError() {
+			return out
 		}
 	}
 
 	return out.WithResponse("Updated successfully")
+}
+
+func (upd Updater) updateVendor() output.Output {
+	out := output.Create(pkg + ".updateVendor")
+	excRsp, cmdOut := upd.exc.Exec(cmdModVendor)
+	if cmdOut.HasError() {
+		return cmdOut
+	}
+	if excRsp.HasError() {
+		return out.WithErrorString(excRsp.StdErrorString())
+	}
+	return out
 }

@@ -8,7 +8,7 @@ Go DSU - provides tools to update Go direct dependencies with more control than 
 - [x] Simple update of direct / indirect modules
 - [x] Return table with available updates
 - [x] Allow select modules to update
-- [ ] Optionally run local tests before and after update of each dependency with rollback if tests fail
+- [x] Optionally run local tests before and after update of each module with rollback if tests fail
 - [ ] Check if license of dependencies/sub-dependencies changed
 - [ ] Check if in direct dependency changed/removed API
 - [ ] List license of all dependencies

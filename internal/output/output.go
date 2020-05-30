@@ -12,10 +12,10 @@ const (
 
 // Output collects error and/or response, and print them by specified mode.
 type Output struct {
-	error    error
-	method   string
-	pid      int
-	response string
+	error      error
+	method     string
+	cmdSuccess bool
+	response   string
 }
 
 type Mode uint16
@@ -30,16 +30,16 @@ func (out Output) GetError() error {
 	return out.error
 }
 
-func (out Output) GetPid() int {
-	return out.pid
-}
-
 func (out Output) HasError() bool {
 	return out.error != nil
 }
 
-func (out *Output) SetPid(pid int) {
-	out.pid = pid
+func (out Output) IsCmdSuccessful() bool {
+	return out.cmdSuccess
+}
+
+func (out Output) SetCmdSuccessful(sc bool) {
+	out.cmdSuccess = sc
 }
 
 func (out Output) ToString(md Mode) string {

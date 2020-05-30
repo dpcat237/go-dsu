@@ -52,7 +52,7 @@ func (exc Executor) Exec(atr string) (Response, output.Output) {
 	}
 	rsp.StdOutput = cmdOut.Bytes()
 	rsp.StdError = cmdErr.Bytes()
-	out.SetPid(cmd.ProcessState.Pid())
+	out.SetCmdSuccessful(cmd.ProcessState.Success())
 
 	return rsp, out
 }

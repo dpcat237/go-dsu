@@ -1,3 +1,8 @@
+# v0.4.0 (2020.05.31)
+
+#### Features
+- Allow optionally run local tests before and after an update of each module with rollback if tests fail
+
 # v0.3.0 (2020.05.27)
 
 #### Features
