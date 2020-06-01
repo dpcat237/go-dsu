@@ -1,82 +1,48 @@
 package updater
 
 import (
-	"bytes"
-	"encoding/json"
 	"fmt"
-	"io"
 	"io/ioutil"
 	"log"
 
+	"github.com/dpcat237/go-dsu/internal/cleaner"
 	"github.com/dpcat237/go-dsu/internal/executor"
 	"github.com/dpcat237/go-dsu/internal/mod"
 	"github.com/dpcat237/go-dsu/internal/output"
 )
 
 const (
-	cmdGetUpdate   = "get -u -t"
-	cmdListModules = "list -u -m -mod=mod -json all"
-	cmdModTidy     = "mod tidy"
-	cmdModVendor   = "mod vendor"
-	cmdTestLocal   = "test $(go list ./... | grep -v /vendor/)"
+	cmdGetUpdate = "get -u -t"
+	cmdModVendor = "mod vendor"
+	cmdTestLocal = "test $(go list ./... | grep -v /vendor/)"
 
 	pkg          = "updater"
 	vendorFolder = "vendor"
 )
 
 type Updater struct {
+	cln *cleaner.Cleaner
 	exc *executor.Executor
+	hnd *mod.Handler
 }
 
-func Init(exc *executor.Executor) *Updater {
+func Init(cln *cleaner.Cleaner, exc *executor.Executor, hnd *mod.Handler) *Updater {
 	return &Updater{
+		cln: cln,
 		exc: exc,
+		hnd: hnd,
 	}
-}
-
-// Clean adds missing and remove unused modules
-func (upd Updater) Clean() output.Output {
-	out := output.Create(pkg + ".Clean")
-
-	excRsp, cmdOut := upd.exc.Exec(cmdModTidy)
-	if cmdOut.HasError() {
-		return cmdOut
-	}
-	if excRsp.HasError() {
-		return out.WithErrorString(excRsp.StdErrorString())
-	}
-
-	return out.WithResponse("Mod clean")
-}
-
-// Preview returns available updates of direct modules
-func (upd Updater) Preview() output.Output {
-	out := output.Create(pkg + ".Preview")
-
-	if outCln := upd.Clean(); outCln.HasError() {
-		return outCln.WithErrorPrefix("Actions done during clean up")
-	}
-
-	mds, mdsOut := upd.listAvailable(true)
-	if mdsOut.HasError() {
-		return mdsOut
-	}
-
-	if len(mds) == 0 {
-		return out.WithResponse("All dependencies up to date")
-	}
-	return out.WithResponse(mds.ToTable())
 }
 
 // UpdateModules clean and update dependencies
 func (upd Updater) UpdateModules(all, sct, tst, vrb bool) output.Output {
 	out := output.Create(pkg + ".UpdateModules")
 
-	if outCln := upd.Clean(); outCln.HasError() {
+	if outCln := upd.cln.Clean(); outCln.HasError() {
 		return outCln
 	}
 
-	mds, mdsOut := upd.listAvailable(true)
+	mds, mdsOut := upd.hnd.ListAvailable(true)
 	if mdsOut.HasError() {
 		return mdsOut
 	}
@@ -96,46 +62,11 @@ func (upd Updater) UpdateModules(all, sct, tst, vrb bool) output.Output {
 
 	if tst {
 		if tstOut := upd.runLocalTests(); tstOut.HasError() {
-			return out.WithErrorString("Update aborted because project's tests fail")
+			return out.WithErrorString("Updater aborted because project's tests fail")
 		}
 	}
 
 	return upd.updateDirectModules(mds, tst, vrb)
-}
-
-// listAvailable list modules with available updates
-func (upd Updater) listAvailable(direct bool) (mod.Modules, output.Output) {
-	var mds mod.Modules
-	out := output.Create(pkg + ".listAvailable")
-
-	excRsp, cmdOut := upd.exc.Exec(cmdListModules)
-	if cmdOut.HasError() {
-		return mds, cmdOut
-	}
-	if excRsp.HasError() {
-		return mds, out.WithErrorString(excRsp.StdErrorString())
-	}
-	if excRsp.IsEmpty() {
-		return mds, out.WithErrorString("Not found any dependency")
-	}
-
-	dec := json.NewDecoder(bytes.NewReader(excRsp.StdOutput))
-	for {
-		var m mod.Module
-		if err := dec.Decode(&m); err != nil {
-			if err == io.EOF {
-				break
-			}
-			return mds, out.WithError(err)
-		}
-
-		if m.Main || (direct && m.Indirect) || m.Update == nil {
-			continue
-		}
-		mds = append(mds, m)
-	}
-
-	return mds, out
 }
 
 func (upd Updater) runLocalTests() output.Output {

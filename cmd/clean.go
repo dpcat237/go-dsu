@@ -6,9 +6,9 @@ import (
 
 	"github.com/spf13/cobra"
 
+	"github.com/dpcat237/go-dsu/internal/cleaner"
 	"github.com/dpcat237/go-dsu/internal/executor"
 	"github.com/dpcat237/go-dsu/internal/output"
-	"github.com/dpcat237/go-dsu/internal/updater"
 )
 
 var (
@@ -44,7 +44,7 @@ func clean(cmd *cobra.Command) {
 		os.Exit(1)
 	}
 
-	upd := updater.Init(exc)
-	out = upd.Clean()
+	cln := cleaner.Init(exc)
+	out = cln.Clean()
 	fmt.Println(out.ToString(md))
 }

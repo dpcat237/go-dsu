@@ -6,7 +6,9 @@ import (
 
 	"github.com/spf13/cobra"
 
+	"github.com/dpcat237/go-dsu/internal/cleaner"
 	"github.com/dpcat237/go-dsu/internal/executor"
+	"github.com/dpcat237/go-dsu/internal/mod"
 	"github.com/dpcat237/go-dsu/internal/output"
 	"github.com/dpcat237/go-dsu/internal/updater"
 )
@@ -14,8 +16,8 @@ import (
 var (
 	updateCmd = &cobra.Command{
 		Use:   "update",
-		Short: "Update modules",
-		Long:  `Add missing and remove unused modules. Update direct modules`,
+		Short: "Updater modules",
+		Long:  `Add missing and remove unused modules. Updater direct modules`,
 		Run: func(cmd *cobra.Command, args []string) {
 			update(cmd)
 		},
@@ -25,7 +27,7 @@ var (
 func init() {
 	rootCmd.AddCommand(updateCmd)
 	updateCmd.Flags().Bool("dev", false, "Development mode")
-	updateCmd.Flags().BoolP("indirect", "i", false, "Update all direct and indirect modules")
+	updateCmd.Flags().BoolP("indirect", "i", false, "Updater all direct and indirect modules")
 	updateCmd.Flags().BoolP("select", "s", false, "Select direct modules to update")
 	updateCmd.Flags().BoolP("test", "t", false, "Run local tests after updating each module and rollback in case of errors")
 	updateCmd.Flags().BoolP("verbose", "v", false, "Print output")
@@ -62,7 +64,9 @@ func update(cmd *cobra.Command) {
 		os.Exit(1)
 	}
 
-	upd := updater.Init(exc)
+	cln := cleaner.Init(exc)
+	hnd := mod.InitHandler(exc)
+	upd := updater.Init(cln, exc, hnd)
 	out = upd.UpdateModules(ind, scl, tst, vrb)
 	fmt.Println(out.ToString(md))
 }

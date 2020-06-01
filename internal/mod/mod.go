@@ -11,6 +11,8 @@ import (
 )
 
 const (
+	pkg = "mod"
+
 	surveyPageSize = 10
 )
 

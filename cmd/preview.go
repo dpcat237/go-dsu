@@ -2,13 +2,21 @@ package cmd
 
 import (
 	"fmt"
+
+	"go/ast"
+	"go/parser"
+	"go/token"
+	"io/ioutil"
+	"log"
 	"os"
 
 	"github.com/spf13/cobra"
 
+	"github.com/dpcat237/go-dsu/internal/cleaner"
 	"github.com/dpcat237/go-dsu/internal/executor"
+	"github.com/dpcat237/go-dsu/internal/mod"
 	"github.com/dpcat237/go-dsu/internal/output"
-	"github.com/dpcat237/go-dsu/internal/updater"
+	"github.com/dpcat237/go-dsu/internal/previewer"
 )
 
 var (
@@ -44,7 +52,9 @@ func preview(cmd *cobra.Command) {
 		os.Exit(1)
 	}
 
-	upd := updater.Init(exc)
+	cln := cleaner.Init(exc)
+	hnd := mod.InitHandler(exc)
+	upd := previewer.Init(cln, exc, hnd)
 	out = upd.Preview()
 	fmt.Println(out.ToString(md))
 }
