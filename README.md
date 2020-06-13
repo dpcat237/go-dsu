@@ -2,15 +2,16 @@
 
 ## Overview
 
-Go DSU - provides tools to update Go direct dependencies with more control than default Go modules.
+Go DSU - provides tools to update Go dependencies with more control than default Go tools.
+It works on base of Go modules.
 
 ### Implement for first stable version
 - [x] Simple update of direct / indirect modules
 - [x] Return table with available updates
 - [x] Allow select modules to update
 - [x] Optionally run local tests before and after update of each module with rollback if tests fail
-- [ ] Check if license of dependencies/sub-dependencies changed
-- [ ] Check if in direct dependency changed/removed API
+- [x] Check if license of direct and indirect dependencies changed
+- [ ] Create table legend for color in table
 - [ ] List license of all dependencies
 - [ ] Cover with tests at least all main functions
 
@@ -38,3 +39,10 @@ Flags:
 
 Use "go-dsu [command] --help" for more information about a command.
 ```
+
+## Examples
+
+### Preview available updates with changes
+`$ go-dsu preview`
+
+![](doc/preview.png)
