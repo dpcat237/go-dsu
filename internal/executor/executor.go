@@ -6,17 +6,24 @@ import (
 	"os"
 	"os/exec"
 
+	"github.com/dpcat237/go-dsu/internal/logger"
 	"github.com/dpcat237/go-dsu/internal/output"
 )
 
-const pkg = "executor"
+const (
+	cmdPermissions = "(cd %s && go list -m -mod=mod -json)"
+
+	pkg = "executor"
+)
 
 type Executor struct {
 	goPath      string
+	lgr         *logger.Logger
 	projectPath string
 }
 
-func Init() (*Executor, output.Output) {
+// Init initializes CLI commands executor
+func Init(lgr *logger.Logger) (*Executor, output.Output) {
 	out := output.Create(pkg + ".init")
 	var exc Executor
 
@@ -30,14 +37,36 @@ func Init() (*Executor, output.Output) {
 	}
 
 	exc.goPath = goExecPath
+	exc.lgr = lgr
 	exc.projectPath = prjPath
 
 	return &exc, out
 }
 
-// Exec executes requested command and returns Response and output.Output
-func (exc Executor) Exec(atr string) (Response, output.Output) {
-	out := output.Create(pkg + ".Exec")
+// ExecGlobal executes requested command and returns Response and output.Output
+func (exc Executor) ExecGlobal(cmdStr string) (Response, output.Output) {
+	out := output.Create(fmt.Sprintf("%s.%s '%s'", pkg, "ExecGlobal", cmdStr))
+	var rsp Response
+	var cmdOut, cmdErr bytes.Buffer
+
+	cmd := exec.Command("/bin/sh", "-c", cmdStr)
+	cmd.Env = os.Environ()
+	cmd.Stdout = &cmdOut
+	cmd.Stderr = &cmdErr
+
+	if err := cmd.Run(); err != nil {
+		return rsp, out.WithErrorString(fmt.Sprintf("Error %s executing %s ", err.Error(), cmdStr))
+	}
+	rsp.StdOutput = cmdOut.Bytes()
+	rsp.StdError = cmdErr.Bytes()
+	out.SetCmdSuccessful(cmd.ProcessState.Success())
+
+	return rsp, out
+}
+
+// ExecProject executes requested command in project's folder and returns Response, and output.Output
+func (exc Executor) ExecProject(atr string) (Response, output.Output) {
+	out := output.Create(fmt.Sprintf("%s.%s '%s'", pkg, "ExecProject", atr))
 	var rsp Response
 	var cmdOut, cmdErr bytes.Buffer
 	cmdStr := fmt.Sprintf("(cd %s/ && %s %s)", exc.projectPath, exc.goPath, atr)
@@ -48,7 +77,7 @@ func (exc Executor) Exec(atr string) (Response, output.Output) {
 	cmd.Stderr = &cmdErr
 
 	if err := cmd.Run(); err != nil {
-		return rsp, out.WithError(err)
+		return rsp, out.WithErrorString(fmt.Sprintf("Error %s executing %s ", err.Error(), cmdStr))
 	}
 	rsp.StdOutput = cmdOut.Bytes()
 	rsp.StdError = cmdErr.Bytes()
@@ -57,9 +86,21 @@ func (exc Executor) Exec(atr string) (Response, output.Output) {
 	return rsp, out
 }
 
-// IsProjectFileExists checks if file/folder of project exists
-func (exc Executor) IsProjectFileExists(pth string) bool {
+// ExistsInProject checks if file/folder of project exists
+func (exc Executor) ExistsInProject(pth string) bool {
 	if _, err := os.Stat(fmt.Sprintf("%s/%s", exc.projectPath, pth)); os.IsNotExist(err) {
+		return false
+	}
+	return true
+}
+
+// FolderAccessible verifies that provided folder is accessible and allow commands execution
+func (exc Executor) FolderAccessible(pth string) bool {
+	if _, err := os.Stat(pth); os.IsNotExist(err) {
+		return false
+	}
+
+	if _, out := exc.ExecGlobal(fmt.Sprintf(cmdPermissions, pth)); out.HasError() {
 		return false
 	}
 	return true

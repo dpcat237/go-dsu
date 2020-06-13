@@ -1,3 +1,8 @@
+# v0.5.0 (2020.06.14)
+
+#### Features
+- Implement in preview command check of changes in license of direct and indirect dependencies
+
 # v0.4.0 (2020.05.31)
 
 #### Features

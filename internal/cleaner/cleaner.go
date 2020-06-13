@@ -25,7 +25,7 @@ func Init(exc *executor.Executor) *Cleaner {
 func (cln Cleaner) Clean() output.Output {
 	out := output.Create(pkg + ".Cleaner")
 
-	excRsp, cmdOut := cln.exc.Exec(cmdModTidy)
+	excRsp, cmdOut := cln.exc.ExecProject(cmdModTidy)
 	if cmdOut.HasError() {
 		return cmdOut
 	}

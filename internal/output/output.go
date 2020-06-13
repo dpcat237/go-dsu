@@ -42,13 +42,17 @@ func (out Output) SetCmdSuccessful(sc bool) {
 	out.cmdSuccess = sc
 }
 
+func (out Output) String() string {
+	return fmt.Sprintf("[%s] %s", out.method, out.error)
+}
+
 func (out Output) ToString(md Mode) string {
 	if !out.HasError() {
 		return out.response
 	}
 
 	if md == ModeDev {
-		return fmt.Sprintf("[%s] %s", out.method, out.error)
+		return out.String()
 	}
 	return fmt.Sprintf("%s", out.error)
 }
@@ -71,4 +75,8 @@ func (out Output) WithErrorString(msg string) Output {
 func (out Output) WithResponse(rsp string) Output {
 	out.response = rsp
 	return out
+}
+
+func (md Mode) IsProduction() bool {
+	return md == ModeProd
 }

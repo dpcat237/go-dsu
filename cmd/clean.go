@@ -8,6 +8,7 @@ import (
 
 	"github.com/dpcat237/go-dsu/internal/cleaner"
 	"github.com/dpcat237/go-dsu/internal/executor"
+	"github.com/dpcat237/go-dsu/internal/logger"
 	"github.com/dpcat237/go-dsu/internal/output"
 )
 
@@ -28,23 +29,29 @@ func init() {
 }
 
 func clean(cmd *cobra.Command) {
-	md := output.ModeProd
+	mod := output.ModeProd
 	if cmd.Flag("dev").Value.String() == "true" {
-		md = output.ModeDev
+		mod = output.ModeDev
 	}
 
 	if out := checkPrerequisites(); out.HasError() {
-		fmt.Println(out.ToString(md))
+		fmt.Println(out.ToString(mod))
 		return
 	}
 
-	exc, out := executor.Init()
+	lgr, lgrOut := logger.Init(mod)
+	if lgrOut.HasError() {
+		fmt.Println(lgrOut.ToString(mod))
+		os.Exit(1)
+	}
+
+	exc, out := executor.Init(lgr)
 	if out.HasError() {
-		fmt.Println(out.ToString(md))
+		fmt.Println(out.ToString(mod))
 		os.Exit(1)
 	}
 
 	cln := cleaner.Init(exc)
 	out = cln.Clean()
-	fmt.Println(out.ToString(md))
+	fmt.Println(out.ToString(mod))
 }

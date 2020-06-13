@@ -8,7 +8,9 @@ import (
 
 	"github.com/dpcat237/go-dsu/internal/cleaner"
 	"github.com/dpcat237/go-dsu/internal/executor"
-	"github.com/dpcat237/go-dsu/internal/mod"
+	"github.com/dpcat237/go-dsu/internal/license"
+	"github.com/dpcat237/go-dsu/internal/logger"
+	"github.com/dpcat237/go-dsu/internal/module"
 	"github.com/dpcat237/go-dsu/internal/output"
 	"github.com/dpcat237/go-dsu/internal/updater"
 )
@@ -34,11 +36,11 @@ func init() {
 }
 
 func update(cmd *cobra.Command) {
-	md := output.ModeProd
+	mod := output.ModeProd
 	var ind, scl, tst, vrb bool
 
 	if cmd.Flag("dev").Value.String() == "true" {
-		md = output.ModeDev
+		mod = output.ModeDev
 	}
 	if cmd.Flag("indirect").Value.String() == "true" {
 		ind = true
@@ -54,19 +56,31 @@ func update(cmd *cobra.Command) {
 	}
 
 	if out := checkPrerequisites(); out.HasError() {
-		fmt.Println(out.ToString(md))
+		fmt.Println(out.ToString(mod))
 		return
 	}
 
-	exc, out := executor.Init()
+	lgr, lgrOut := logger.Init(mod)
+	if lgrOut.HasError() {
+		fmt.Println(lgrOut.ToString(mod))
+		os.Exit(1)
+	}
+
+	exc, out := executor.Init(lgr)
 	if out.HasError() {
-		fmt.Println(out.ToString(md))
+		fmt.Println(out.ToString(mod))
+		os.Exit(1)
+	}
+
+	licHnd, licHndOut := license.InitHandler(lgr)
+	if licHndOut.HasError() {
+		fmt.Println(licHndOut.ToString(mod))
 		os.Exit(1)
 	}
 
 	cln := cleaner.Init(exc)
-	hnd := mod.InitHandler(exc)
+	hnd := module.InitHandler(exc, lgr, licHnd)
 	upd := updater.Init(cln, exc, hnd)
 	out = upd.UpdateModules(ind, scl, tst, vrb)
-	fmt.Println(out.ToString(md))
+	fmt.Println(out.ToString(mod))
 }

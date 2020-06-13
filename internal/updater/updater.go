@@ -7,7 +7,7 @@ import (
 
 	"github.com/dpcat237/go-dsu/internal/cleaner"
 	"github.com/dpcat237/go-dsu/internal/executor"
-	"github.com/dpcat237/go-dsu/internal/mod"
+	"github.com/dpcat237/go-dsu/internal/module"
 	"github.com/dpcat237/go-dsu/internal/output"
 )
 
@@ -23,10 +23,10 @@ const (
 type Updater struct {
 	cln *cleaner.Cleaner
 	exc *executor.Executor
-	hnd *mod.Handler
+	hnd *module.Handler
 }
 
-func Init(cln *cleaner.Cleaner, exc *executor.Executor, hnd *mod.Handler) *Updater {
+func Init(cln *cleaner.Cleaner, exc *executor.Executor, hnd *module.Handler) *Updater {
 	return &Updater{
 		cln: cln,
 		exc: exc,
@@ -72,7 +72,7 @@ func (upd Updater) UpdateModules(all, sct, tst, vrb bool) output.Output {
 func (upd Updater) runLocalTests() output.Output {
 	out := output.Create(pkg + ".runLocalTests")
 
-	_, cmdOut := upd.exc.Exec(cmdTestLocal)
+	_, cmdOut := upd.exc.ExecProject(cmdTestLocal)
 	if cmdOut.HasError() {
 		return cmdOut
 	}
@@ -94,9 +94,9 @@ func (upd Updater) hasLicense() output.Output {
 	return out
 }
 
-func (upd Updater) rollback(m mod.Module) output.Output {
+func (upd Updater) rollback(m module.Module) output.Output {
 	out := output.Create(pkg + ".rollback")
-	excRsp, cmdOut := upd.exc.Exec(fmt.Sprintf("get %s", m))
+	excRsp, cmdOut := upd.exc.ExecProject(fmt.Sprintf("get %s", m))
 	if cmdOut.HasError() {
 		return cmdOut
 	}
@@ -110,7 +110,7 @@ func (upd Updater) rollback(m mod.Module) output.Output {
 func (upd Updater) updateAll() output.Output {
 	out := output.Create(pkg + ".updateAll")
 
-	excRsp, cmdOut := upd.exc.Exec(cmdGetUpdate)
+	excRsp, cmdOut := upd.exc.ExecProject(cmdGetUpdate)
 	if cmdOut.HasError() {
 		return cmdOut
 	}
@@ -122,9 +122,9 @@ func (upd Updater) updateAll() output.Output {
 }
 
 // updateDirectModule updates direct module
-func (upd Updater) updateDirectModule(m mod.Module, tst, vnd, vrb bool) output.Output {
+func (upd Updater) updateDirectModule(m module.Module, tst, vnd, vrb bool) output.Output {
 	out := output.Create(pkg + ".updateModule")
-	excRsp, cmdOut := upd.exc.Exec(fmt.Sprintf("get %s", m.NewModule()))
+	excRsp, cmdOut := upd.exc.ExecProject(fmt.Sprintf("get %s", m.NewModule()))
 	if cmdOut.HasError() {
 		return cmdOut
 	}
@@ -152,9 +152,9 @@ func (upd Updater) updateDirectModule(m mod.Module, tst, vnd, vrb bool) output.O
 }
 
 // updateDirectModules updates direct modules
-func (upd Updater) updateDirectModules(mds mod.Modules, tst, vrb bool) output.Output {
+func (upd Updater) updateDirectModules(mds module.Modules, tst, vrb bool) output.Output {
 	out := output.Create(pkg + ".updateAll")
-	vnd := upd.exc.IsProjectFileExists(vendorFolder)
+	vnd := upd.exc.ExistsInProject(vendorFolder)
 
 	for _, m := range mds {
 		if mOut := upd.updateDirectModule(m, tst, vnd, vrb); mOut.HasError() {
@@ -173,7 +173,7 @@ func (upd Updater) updateDirectModules(mds mod.Modules, tst, vrb bool) output.Ou
 
 func (upd Updater) updateVendor() output.Output {
 	out := output.Create(pkg + ".updateVendor")
-	excRsp, cmdOut := upd.exc.Exec(cmdModVendor)
+	excRsp, cmdOut := upd.exc.ExecProject(cmdModVendor)
 	if cmdOut.HasError() {
 		return cmdOut
 	}

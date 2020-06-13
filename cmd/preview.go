@@ -2,19 +2,15 @@ package cmd
 
 import (
 	"fmt"
-
-	"go/ast"
-	"go/parser"
-	"go/token"
-	"io/ioutil"
-	"log"
 	"os"
 
 	"github.com/spf13/cobra"
 
 	"github.com/dpcat237/go-dsu/internal/cleaner"
 	"github.com/dpcat237/go-dsu/internal/executor"
-	"github.com/dpcat237/go-dsu/internal/mod"
+	"github.com/dpcat237/go-dsu/internal/license"
+	"github.com/dpcat237/go-dsu/internal/logger"
+	"github.com/dpcat237/go-dsu/internal/module"
 	"github.com/dpcat237/go-dsu/internal/output"
 	"github.com/dpcat237/go-dsu/internal/previewer"
 )
@@ -36,25 +32,37 @@ func init() {
 }
 
 func preview(cmd *cobra.Command) {
-	md := output.ModeProd
+	mod := output.ModeProd
 	if cmd.Flag("dev").Value.String() == "true" {
-		md = output.ModeDev
+		mod = output.ModeDev
 	}
 
 	if out := checkPrerequisites(); out.HasError() {
-		fmt.Println(out.ToString(md))
+		fmt.Println(out.ToString(mod))
 		return
 	}
 
-	exc, out := executor.Init()
-	if out.HasError() {
-		fmt.Println(out.ToString(md))
+	lgr, lgrOut := logger.Init(mod)
+	if lgrOut.HasError() {
+		fmt.Println(lgrOut.ToString(mod))
+		os.Exit(1)
+	}
+
+	exc, excOut := executor.Init(lgr)
+	if excOut.HasError() {
+		fmt.Println(excOut.ToString(mod))
+		os.Exit(1)
+	}
+
+	licHnd, licHndOut := license.InitHandler(lgr)
+	if licHndOut.HasError() {
+		fmt.Println(licHndOut.ToString(mod))
 		os.Exit(1)
 	}
 
 	cln := cleaner.Init(exc)
-	hnd := mod.InitHandler(exc)
+	hnd := module.InitHandler(exc, lgr, licHnd)
 	upd := previewer.Init(cln, exc, hnd)
-	out = upd.Preview()
-	fmt.Println(out.ToString(md))
+	out := upd.Preview()
+	fmt.Println(out.ToString(mod))
 }
