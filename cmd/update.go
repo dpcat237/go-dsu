@@ -6,7 +6,6 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/dpcat237/go-dsu/internal/cleaner"
 	"github.com/dpcat237/go-dsu/internal/executor"
 	"github.com/dpcat237/go-dsu/internal/license"
 	"github.com/dpcat237/go-dsu/internal/logger"
@@ -78,9 +77,8 @@ func update(cmd *cobra.Command) {
 		os.Exit(1)
 	}
 
-	cln := cleaner.Init(exc)
 	hnd := module.InitHandler(exc, lgr, licHnd)
-	upd := updater.Init(cln, exc, hnd)
+	upd := updater.Init(exc, hnd)
 	out = upd.UpdateModules(ind, scl, tst, vrb)
 	fmt.Println(out.ToString(mod))
 }

@@ -2,10 +2,7 @@ package updater
 
 import (
 	"fmt"
-	"io/ioutil"
-	"log"
 
-	"github.com/dpcat237/go-dsu/internal/cleaner"
 	"github.com/dpcat237/go-dsu/internal/executor"
 	"github.com/dpcat237/go-dsu/internal/module"
 	"github.com/dpcat237/go-dsu/internal/output"
@@ -21,14 +18,13 @@ const (
 )
 
 type Updater struct {
-	cln *cleaner.Cleaner
 	exc *executor.Executor
 	hnd *module.Handler
 }
 
-func Init(cln *cleaner.Cleaner, exc *executor.Executor, hnd *module.Handler) *Updater {
+// Init initializes updater handler
+func Init(exc *executor.Executor, hnd *module.Handler) *Updater {
 	return &Updater{
-		cln: cln,
 		exc: exc,
 		hnd: hnd,
 	}
@@ -37,10 +33,6 @@ func Init(cln *cleaner.Cleaner, exc *executor.Executor, hnd *module.Handler) *Up
 // UpdateModules clean and update dependencies
 func (upd Updater) UpdateModules(all, sct, tst, vrb bool) output.Output {
 	out := output.Create(pkg + ".UpdateModules")
-
-	if outCln := upd.cln.Clean(); outCln.HasError() {
-		return outCln
-	}
 
 	mds, mdsOut := upd.hnd.ListAvailable(true)
 	if mdsOut.HasError() {
@@ -76,21 +68,6 @@ func (upd Updater) runLocalTests() output.Output {
 	if cmdOut.HasError() {
 		return cmdOut
 	}
-	return out
-}
-
-func (upd Updater) hasLicense() output.Output {
-	out := output.Create(pkg + ".runLocalTests")
-
-	files, err := ioutil.ReadDir("./")
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	for _, f := range files {
-		fmt.Println(f.Name())
-	}
-
 	return out
 }
 

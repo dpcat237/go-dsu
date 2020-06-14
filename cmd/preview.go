@@ -6,7 +6,6 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/dpcat237/go-dsu/internal/cleaner"
 	"github.com/dpcat237/go-dsu/internal/executor"
 	"github.com/dpcat237/go-dsu/internal/license"
 	"github.com/dpcat237/go-dsu/internal/logger"
@@ -60,9 +59,8 @@ func preview(cmd *cobra.Command) {
 		os.Exit(1)
 	}
 
-	cln := cleaner.Init(exc)
 	hnd := module.InitHandler(exc, lgr, licHnd)
-	upd := previewer.Init(cln, exc, hnd)
+	upd := previewer.Init(exc, hnd)
 	out := upd.Preview()
 	fmt.Println(out.ToString(mod))
 }

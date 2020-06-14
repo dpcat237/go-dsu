@@ -3,7 +3,6 @@ package previewer
 import (
 	"fmt"
 
-	"github.com/dpcat237/go-dsu/internal/cleaner"
 	"github.com/dpcat237/go-dsu/internal/executor"
 	"github.com/dpcat237/go-dsu/internal/module"
 	"github.com/dpcat237/go-dsu/internal/output"
@@ -14,14 +13,12 @@ const (
 )
 
 type Preview struct {
-	cln *cleaner.Cleaner
 	exc *executor.Executor
 	hnd *module.Handler
 }
 
-func Init(cln *cleaner.Cleaner, exc *executor.Executor, hnd *module.Handler) *Preview {
+func Init(exc *executor.Executor, hnd *module.Handler) *Preview {
 	return &Preview{
-		cln: cln,
 		exc: exc,
 		hnd: hnd,
 	}
