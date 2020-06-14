@@ -249,6 +249,8 @@ func (hnd Handler) updateDifferencesSubModules(subMds, subUpMds Modules, dffs *D
 		}
 
 		if !found {
+			upMd.License = hnd.licHnd.FindLicense(upMd.Dir)
+			hnd.licHnd.IdentifyType(&upMd.License)
 			dffs.AddModule(upMd, diff_weight_high, diff_type_new_submodule)
 		}
 	}

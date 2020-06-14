@@ -106,7 +106,11 @@ func (md Module) differenceToString(dff Difference) string {
 	case diff_type_license_removed:
 		ln = fmt.Sprintf("- License %s would be removed in %s", dff.Module.License.Name, dff.ModuleUpdate)
 	case diff_type_new_submodule:
-		ln = fmt.Sprintf("- Would be added new submodule %s", dff.Module)
+		if dff.Module.License.Name == "" {
+			ln = fmt.Sprintf("- Would be added new submodule %s with unknown license", dff.Module)
+		} else {
+			ln = fmt.Sprintf("- Would be added new submodule %s with license %s", dff.Module, dff.Module.License.Name)
+		}
 	}
 	return ln
 }
