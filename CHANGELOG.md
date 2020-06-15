@@ -3,6 +3,9 @@
 #### Features
 - Allow passing project path for preview command
 
+#### Fixes
+- Fix empty directory path for new modules
+
 # v0.5.0 (2020.06.14)
 
 #### Features
