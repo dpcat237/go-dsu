@@ -1,3 +1,8 @@
+# v0.6.0 (2020.06.15)
+
+#### Features
+- Allow passing project path for preview command
+
 # v0.5.0 (2020.06.14)
 
 #### Features

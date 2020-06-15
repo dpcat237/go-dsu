@@ -28,6 +28,7 @@ var (
 func init() {
 	rootCmd.AddCommand(previewCmd)
 	previewCmd.Flags().Bool("dev", false, "Development mode")
+	previewCmd.Flags().String("path", "", "Preview project from git path. Eg. github.com/spf13/cobra")
 }
 
 func preview(cmd *cobra.Command) {
@@ -61,6 +62,6 @@ func preview(cmd *cobra.Command) {
 
 	hnd := module.InitHandler(exc, lgr, licHnd)
 	upd := previewer.Init(exc, hnd)
-	out := upd.Preview()
+	out := upd.Preview(cmd.Flag("path").Value.String())
 	fmt.Println(out.ToString(mod))
 }

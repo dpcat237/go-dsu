@@ -96,6 +96,10 @@ func (exc Executor) ExistsInProject(pth string) bool {
 
 // FolderAccessible verifies that provided folder is accessible and allow commands execution
 func (exc Executor) FolderAccessible(pth string) bool {
+	if pth == "" {
+		return false
+	}
+
 	if _, err := os.Stat(pth); os.IsNotExist(err) {
 		return false
 	}
@@ -104,4 +108,9 @@ func (exc Executor) FolderAccessible(pth string) bool {
 		return false
 	}
 	return true
+}
+
+// UpdateProjectPath defines projects path
+func (exc *Executor) UpdateProjectPath(prjPath string) {
+	exc.projectPath = prjPath
 }
