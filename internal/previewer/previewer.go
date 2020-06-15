@@ -5,6 +5,8 @@ import (
 	"encoding/json"
 	"fmt"
 
+	"github.com/schollz/progressbar/v3"
+
 	"github.com/dpcat237/go-dsu/internal/executor"
 	"github.com/dpcat237/go-dsu/internal/module"
 	"github.com/dpcat237/go-dsu/internal/output"
@@ -31,6 +33,11 @@ func Init(exc *executor.Executor, mdHnd *module.Handler) *Preview {
 // Preview returns available updates of direct modules
 func (hnd Preview) Preview(pth string) output.Output {
 	out := output.Create(pkg + ".Preview")
+	bar := progressbar.Default(100)
+
+	if err := bar.Add(5); err != nil {
+		return out.WithError(err)
+	}
 
 	if pth != "" {
 		if pthOut := hnd.updateProjectPath(pth); pthOut.HasError() {
@@ -48,6 +55,12 @@ func (hnd Preview) Preview(pth string) output.Output {
 		return out.WithResponse("All dependencies up to date")
 	}
 
+	if err := bar.Add(5); err != nil {
+		return out.WithError(err)
+	}
+
+	tt := len(mds)
+	each := 90 / tt
 	for k, md := range mds {
 		dfs, dfsOut := hnd.mdHnd.AnalyzeUpdateDifferences(md)
 		if dfsOut.HasError() {
@@ -57,6 +70,13 @@ func (hnd Preview) Preview(pth string) output.Output {
 		if len(dfs) > 0 {
 			mds[k].UpdateDifferences = dfs
 		}
+
+		if err := bar.Add(each); err != nil {
+			return out.WithError(err)
+		}
+	}
+	if err := bar.Add(90 - each*tt); err != nil {
+		return out.WithError(err)
 	}
 
 	return out.WithResponse(mds.ToTable())

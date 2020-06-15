@@ -1,3 +1,8 @@
+# v0.7.0 (2020.06.16)
+
+#### Features
+- Add progress bar for preview command
+
 # v0.6.0 (2020.06.15)
 
 #### Features
