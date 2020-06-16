@@ -140,8 +140,8 @@ func (hnd Handler) updateDifferencesModule(md, mdUp Module, dffs *Differences) o
 	mdUp.License = hnd.licHnd.FindLicense(mdUp.Dir)
 
 	if !md.License.Found() && !mdUp.License.Found() {
-		dffs.AddDifference(md, mdUp, diff_weight_low, diff_type_license_not_found)
-		hnd.lgr.Debug(fmt.Sprintf("Module %s -> %s differences %d", md, mdUp, diff_type_license_not_found))
+		dffs.AddDifference(md, mdUp, diffWeightLow, diffTypeLicenseNotFound)
+		hnd.lgr.Debug(fmt.Sprintf("Module %s -> %s differences %d", md, mdUp, diffTypeLicenseNotFound))
 		return out
 	}
 
@@ -150,14 +150,14 @@ func (hnd Handler) updateDifferencesModule(md, mdUp Module, dffs *Differences) o
 	}
 
 	if md.License.Found() && !mdUp.License.Found() {
-		dffs.AddDifference(md, mdUp, diff_weight_high, diff_type_license_removed)
-		hnd.lgr.Debug(fmt.Sprintf("Module %s -> %s differences %d", md, mdUp, diff_type_license_removed))
+		dffs.AddDifference(md, mdUp, diffWeightHigh, diffTypeLicenseRemoved)
+		hnd.lgr.Debug(fmt.Sprintf("Module %s -> %s differences %d", md, mdUp, diffTypeLicenseRemoved))
 		return out
 	}
 
 	if !md.License.Found() && mdUp.License.Found() {
-		dffs.AddDifference(md, mdUp, diff_weight_high, diff_type_license_added)
-		hnd.lgr.Debug(fmt.Sprintf("Module %s -> %s differences %d", md, mdUp, diff_type_license_added))
+		dffs.AddDifference(md, mdUp, diffWeightHigh, diffTypeLicenseAdded)
+		hnd.lgr.Debug(fmt.Sprintf("Module %s -> %s differences %d", md, mdUp, diffTypeLicenseAdded))
 		return out
 	}
 
@@ -167,39 +167,39 @@ func (hnd Handler) updateDifferencesModule(md, mdUp Module, dffs *Differences) o
 
 	// Minor changes in the same license
 	if md.License.Name == mdUp.License.Name {
-		hnd.lgr.Debug(fmt.Sprintf("Module %s -> %s differences %d", md, mdUp, diff_type_license_minor_changes))
-		dffs.AddDifference(md, mdUp, diff_weight_low, diff_type_license_minor_changes)
+		hnd.lgr.Debug(fmt.Sprintf("Module %s -> %s differences %d", md, mdUp, diffTypeLicenseMinorChanges))
+		dffs.AddDifference(md, mdUp, diffWeightLow, diffTypeLicenseMinorChanges)
 		return out
 	}
 
 	// License name changed maintaining restrictiveness type
 	if md.License.Type == mdUp.License.Type && md.License.Name != mdUp.License.Name {
-		hnd.lgr.Debug(fmt.Sprintf("Module %s -> %s differences %d", md, mdUp, diff_type_license_name_changed))
-		dffs.AddDifference(md, mdUp, diff_weight_medium, diff_type_license_name_changed)
+		hnd.lgr.Debug(fmt.Sprintf("Module %s -> %s differences %d", md, mdUp, diffTypeLicenseNameChanged))
+		dffs.AddDifference(md, mdUp, diffWeightMedium, diffTypeLicenseNameChanged)
 		return out
 	}
 
 	// License changed to less restrictive
 	if !md.License.IsMoreRestrictive(mdUp.License.Type) {
-		hnd.lgr.Debug(fmt.Sprintf("Module %s -> %s differences %d", md, mdUp, diff_type_license_less_strict_changed))
-		dffs.AddDifference(md, mdUp, diff_weight_medium, diff_type_license_less_strict_changed)
+		hnd.lgr.Debug(fmt.Sprintf("Module %s -> %s differences %d", md, mdUp, diffTypeLicenseLessStrictChanged))
+		dffs.AddDifference(md, mdUp, diffWeightMedium, diffTypeLicenseLessStrictChanged)
 		return out
 	}
 
 	// License changed to more restrictive
-	hnd.lgr.Debug(fmt.Sprintf("Module %s -> %s differences %d", md, mdUp, diff_type_license_more_strict_changed))
-	dffs.AddDifference(md, mdUp, diff_weight_medium, diff_type_license_more_strict_changed)
+	hnd.lgr.Debug(fmt.Sprintf("Module %s -> %s differences %d", md, mdUp, diffTypeLicenseMoreStrictChanged))
+	dffs.AddDifference(md, mdUp, diffWeightMedium, diffTypeLicenseMoreStrictChanged)
 	return out
 }
 
 func (hnd Handler) updateDifferencesSubModule(md, mdUp Module, dffs *Differences) output.Output {
 	out := output.Create(pkg + ".updateDifferencesSubModule")
 	if out := hnd.updateDir(&md); out.HasError() {
-		dffs.AddModule(md, diff_weight_high, diff_type_module_fetch_error)
+		dffs.AddModule(md, diffWeightHigh, diffTypeModuleFetchError)
 		return out
 	}
 	if out := hnd.updateDir(&mdUp); out.HasError() {
-		dffs.AddModule(mdUp, diff_weight_high, diff_type_module_fetch_error)
+		dffs.AddModule(mdUp, diffWeightHigh, diffTypeModuleFetchError)
 		return out
 	}
 
@@ -250,13 +250,13 @@ func (hnd Handler) updateDifferencesSubModules(subMds, subUpMds Modules, dffs *D
 
 		if !found {
 			if out := hnd.updateDir(&upMd); out.HasError() {
-				dffs.AddModule(upMd, diff_weight_high, diff_type_module_fetch_error)
+				dffs.AddModule(upMd, diffWeightHigh, diffTypeModuleFetchError)
 				return out
 			}
 
 			upMd.License = hnd.licHnd.FindLicense(upMd.Dir)
 			hnd.licHnd.IdentifyType(&upMd.License)
-			dffs.AddModule(upMd, diff_weight_high, diff_type_new_submodule)
+			dffs.AddModule(upMd, diffWeightHigh, diffTypeNewSubmodule)
 		}
 	}
 	return out

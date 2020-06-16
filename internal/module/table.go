@@ -89,23 +89,23 @@ func (md Module) cellColor(clTp tableColor) tablewriter.Colors {
 func (md Module) differenceToString(dff Difference) string {
 	var ln string
 	switch dff.Type {
-	case diff_type_module_fetch_error:
+	case diffTypeModuleFetchError:
 		ln = fmt.Sprintf("- Error fetching - %s", dff.Module)
-	case diff_type_license_not_found:
+	case diffTypeLicenseNotFound:
 		ln = fmt.Sprintf("- License not found - %s", dff.Module)
-	case diff_type_license_added:
+	case diffTypeLicenseAdded:
 		ln = fmt.Sprintf("- License %s would be added in update of %s", dff.ModuleUpdate.License.Name, dff.Module)
-	case diff_type_license_minor_changes:
+	case diffTypeLicenseMinorChanges:
 		ln = fmt.Sprintf("- Minor changes in license %s from %s to %s", dff.ModuleUpdate.License.Name, dff.Module, dff.ModuleUpdate)
-	case diff_type_license_name_changed:
+	case diffTypeLicenseNameChanged:
 		ln = fmt.Sprintf("- License would change from %s in %s to %s in %s", dff.Module.License.Name, dff.Module, dff.ModuleUpdate.License.Name, dff.ModuleUpdate)
-	case diff_type_license_less_strict_changed:
+	case diffTypeLicenseLessStrictChanged:
 		ln = fmt.Sprintf("- License would change to less strictive, from %s in %s to %s in %s", dff.Module.License.Name, dff.Module, dff.ModuleUpdate.License.Name, dff.ModuleUpdate)
-	case diff_type_license_more_strict_changed:
+	case diffTypeLicenseMoreStrictChanged:
 		ln = fmt.Sprintf("- License would change to more strictive, from %s in %s to %s in %s", dff.Module.License.Name, dff.Module, dff.ModuleUpdate.License.Name, dff.ModuleUpdate)
-	case diff_type_license_removed:
+	case diffTypeLicenseRemoved:
 		ln = fmt.Sprintf("- License %s would be removed in %s", dff.Module.License.Name, dff.ModuleUpdate)
-	case diff_type_new_submodule:
+	case diffTypeNewSubmodule:
 		if dff.Module.License.Name == "" {
 			ln = fmt.Sprintf("- Would be added new submodule %s with unknown license", dff.Module)
 		} else {
@@ -118,11 +118,11 @@ func (md Module) differenceToString(dff Difference) string {
 func (md Module) levelToColor(lvl diffLevel) tableColor {
 	cl := color_white
 	switch lvl {
-	case diff_weight_low:
+	case diffWeightLow:
 		cl = color_blue
-	case diff_weight_medium:
+	case diffWeightMedium:
 		cl = color_yellow
-	case diff_weight_high:
+	case diffWeightHigh:
 		cl = color_red
 	}
 	return cl

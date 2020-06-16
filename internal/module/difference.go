@@ -1,22 +1,22 @@
 package module
 
 const (
-	diff_weight_none = diffLevel(iota)
-	diff_weight_low
-	diff_weight_medium
-	diff_weight_high
+	diffWeightNone = diffLevel(iota)
+	diffWeightLow
+	diffWeightMedium
+	diffWeightHigh
 )
 
 const (
-	diff_type_module_fetch_error = diffType(iota)
-	diff_type_license_not_found
-	diff_type_license_added
-	diff_type_license_minor_changes
-	diff_type_license_name_changed
-	diff_type_license_less_strict_changed
-	diff_type_license_more_strict_changed
-	diff_type_license_removed
-	diff_type_new_submodule
+	diffTypeModuleFetchError = diffType(iota)
+	diffTypeLicenseNotFound
+	diffTypeLicenseAdded
+	diffTypeLicenseMinorChanges
+	diffTypeLicenseNameChanged
+	diffTypeLicenseLessStrictChanged
+	diffTypeLicenseMoreStrictChanged
+	diffTypeLicenseRemoved
+	diffTypeNewSubmodule
 )
 
 type diffLevel uint16
