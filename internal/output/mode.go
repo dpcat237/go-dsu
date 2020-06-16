@@ -1,7 +1,9 @@
 package output
 
 const (
+	//ModeProd execute command without debugging logs
 	ModeProd Mode = iota + 1
+	//ModeDev execute command with debugging logs
 	ModeDev
 )
 

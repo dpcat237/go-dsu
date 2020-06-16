@@ -63,17 +63,16 @@ func (lic License) IsMoreRestrictive(nTp Type) bool {
 	}
 
 	switch {
-	case lic.Type == Unencumbered && (nTp == Permissive || nTp == Notice || nTp == Reciprocal || nTp == Restricted || nTp == Forbidden):
-		return true
-	case lic.Type == Permissive && (nTp == Notice || nTp == Reciprocal || nTp == Restricted || nTp == Forbidden):
-		return true
-	case lic.Type == Notice && (nTp == Reciprocal || nTp == Restricted || nTp == Forbidden):
+	case lic.Type == Restricted && nTp == Forbidden:
 		return true
 	case lic.Type == Reciprocal && (nTp == Restricted || nTp == Forbidden):
 		return true
-	case lic.Type == Restricted && nTp == Forbidden:
+	case lic.Type == Notice && (nTp == Reciprocal || nTp == Restricted || nTp == Forbidden):
+		return true
+	case lic.Type == Permissive && nTp != Permissive && nTp != Unencumbered && nTp != Unknown:
+		return true
+	case lic.Type == Unencumbered && nTp != Unencumbered && nTp != Unknown:
 		return true
 	}
-
 	return false
 }
