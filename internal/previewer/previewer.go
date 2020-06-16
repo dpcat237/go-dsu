@@ -4,10 +4,12 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"sync"
 
 	"github.com/schollz/progressbar/v3"
 
 	"github.com/dpcat237/go-dsu/internal/executor"
+	"github.com/dpcat237/go-dsu/internal/logger"
 	"github.com/dpcat237/go-dsu/internal/module"
 	"github.com/dpcat237/go-dsu/internal/output"
 )
@@ -20,12 +22,14 @@ const (
 
 type Preview struct {
 	exc   *executor.Executor
+	lgr   *logger.Logger
 	mdHnd *module.Handler
 }
 
-func Init(exc *executor.Executor, mdHnd *module.Handler) *Preview {
+func Init(exc *executor.Executor, lgr *logger.Logger, mdHnd *module.Handler) *Preview {
 	return &Preview{
 		exc:   exc,
+		lgr:   lgr,
 		mdHnd: mdHnd,
 	}
 }
@@ -59,22 +63,29 @@ func (hnd Preview) Preview(pth string) output.Output {
 		return out.WithError(err)
 	}
 
+	var wg sync.WaitGroup
 	tt := len(mds)
 	each := 90 / tt
-	for k, md := range mds {
-		dfs, dfsOut := hnd.mdHnd.AnalyzeUpdateDifferences(md)
-		if dfsOut.HasError() {
-			return dfsOut
-		}
+	for k := range mds {
+		wg.Add(1)
+		go func(md *module.Module, wg *sync.WaitGroup, bar *progressbar.ProgressBar) {
+			defer wg.Done()
+			dfs, dfsOut := hnd.mdHnd.AnalyzeUpdateDifferences(*md)
+			if dfsOut.HasError() {
+				hnd.lgr.Debug(dfsOut.String())
+			}
 
-		if len(dfs) > 0 {
-			mds[k].UpdateDifferences = dfs
-		}
+			if len(dfs) > 0 {
+				md.UpdateDifferences = dfs
+			}
 
-		if err := bar.Add(each); err != nil {
-			return out.WithError(err)
-		}
+			if err := bar.Add(each); err != nil {
+				hnd.lgr.Debug(err.Error())
+			}
+		}(&mds[k], &wg, bar)
 	}
+
+	wg.Wait()
 	if err := bar.Add(90 - each*tt); err != nil {
 		return out.WithError(err)
 	}

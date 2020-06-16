@@ -61,7 +61,7 @@ func preview(cmd *cobra.Command) {
 	}
 
 	hnd := module.InitHandler(exc, lgr, licHnd)
-	upd := previewer.Init(exc, hnd)
+	upd := previewer.Init(exc, lgr, hnd)
 	out := upd.Preview(cmd.Flag("path").Value.String())
 	fmt.Println(out.ToString(mod))
 }
