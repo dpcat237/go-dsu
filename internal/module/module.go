@@ -14,6 +14,7 @@ const (
 	surveyPageSize = 10
 )
 
+//Details contains additional information about module
 type Details struct {
 	License           license.License
 	UpdateDifferences Differences
@@ -36,6 +37,7 @@ type Module struct {
 	Details
 }
 
+//Modules contains collections of Modules
 type Modules []Module
 
 // ModuleError represents the error when a module cannot be loaded
@@ -62,6 +64,7 @@ func (md Module) String() string {
 	return fmt.Sprintf("%s@%s", md.Path, md.Version)
 }
 
+//PathCleaned cleans module path
 func (md Module) PathCleaned() string {
 	if strings.Contains(md.Path, ".v") {
 		parts := strings.Split(md.Path, ".v")

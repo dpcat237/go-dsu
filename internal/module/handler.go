@@ -19,12 +19,14 @@ const (
 	cmdModDownload    = "mod download -json"
 )
 
+//Handler handles functions related to modules
 type Handler struct {
 	exc    *executor.Executor
 	lgr    *logger.Logger
 	licHnd *license.Handler
 }
 
+//InitHandler initializes Module handler
 func InitHandler(exc *executor.Executor, lgr *logger.Logger, licHnd *license.Handler) *Handler {
 	return &Handler{
 		exc:    exc,

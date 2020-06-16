@@ -20,12 +20,14 @@ const (
 	pkg = "previewer"
 )
 
+//Preview handles changes preview processes
 type Preview struct {
 	exc   *executor.Executor
 	lgr   *logger.Logger
 	mdHnd *module.Handler
 }
 
+//Init initializes Preview
 func Init(exc *executor.Executor, lgr *logger.Logger, mdHnd *module.Handler) *Preview {
 	return &Preview{
 		exc:   exc,

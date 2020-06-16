@@ -8,11 +8,11 @@ import (
 )
 
 const (
-	color_white = tableColor(iota)
-	color_green
-	color_blue
-	color_yellow
-	color_red
+	colorWhite = tableColor(iota)
+	colorGreen
+	colorBlue
+	colorYellow
+	colorRed
 )
 
 var tableHeader = []string{"Direct Module", "Version", "New Version", "Changes"}
@@ -39,14 +39,14 @@ func (md Module) addModuleRows(tbl *tablewriter.Table) {
 	dataBase := md.rowBase()
 	if len(md.UpdateDifferences) == 0 {
 		dataBase = append(dataBase, "")
-		tbl.Rich(dataBase, md.rowColors(color_green, color_white, color_white, color_white))
+		tbl.Rich(dataBase, md.rowColors(colorGreen, colorWhite, colorWhite, colorWhite))
 		return
 	}
 
 	if len(md.UpdateDifferences) == 1 {
 		dff := md.UpdateDifferences[0]
 		dataBase = append(dataBase, md.differenceToString(dff))
-		cls := md.rowColors(md.levelToColor(dff.Level), color_white, color_white, md.levelToColor(dff.Level))
+		cls := md.rowColors(md.levelToColor(dff.Level), colorWhite, colorWhite, md.levelToColor(dff.Level))
 		tbl.Rich(dataBase, cls)
 		return
 	}
@@ -58,12 +58,12 @@ func (md Module) addModuleRows(tbl *tablewriter.Table) {
 		data = dataBase
 		data = append(data, md.differenceToString(dff))
 		if fst {
-			cls := md.rowColors(md.levelToColor(hgLvl), color_white, color_white, md.levelToColor(dff.Level))
+			cls := md.rowColors(md.levelToColor(hgLvl), colorWhite, colorWhite, md.levelToColor(dff.Level))
 			tbl.Rich(data, cls)
 			continue
 		}
 
-		cls := md.rowColors(md.levelToColor(md.UpdateDifferences.highestLevel()), color_white, color_white, md.levelToColor(dff.Level))
+		cls := md.rowColors(md.levelToColor(md.UpdateDifferences.highestLevel()), colorWhite, colorWhite, md.levelToColor(dff.Level))
 		tbl.Rich(data, cls)
 		fst = true
 	}
@@ -72,15 +72,15 @@ func (md Module) addModuleRows(tbl *tablewriter.Table) {
 func (md Module) cellColor(clTp tableColor) tablewriter.Colors {
 	cl := tablewriter.FgWhiteColor
 	switch clTp {
-	case color_white:
+	case colorWhite:
 		cl = tablewriter.FgWhiteColor
-	case color_green:
+	case colorGreen:
 		cl = tablewriter.FgGreenColor
-	case color_blue:
+	case colorBlue:
 		cl = tablewriter.FgBlueColor
-	case color_yellow:
+	case colorYellow:
 		cl = tablewriter.FgYellowColor
-	case color_red:
+	case colorRed:
 		cl = tablewriter.FgHiRedColor
 	}
 	return tablewriter.Colors{tablewriter.Normal, cl}
@@ -116,14 +116,14 @@ func (md Module) differenceToString(dff Difference) string {
 }
 
 func (md Module) levelToColor(lvl diffLevel) tableColor {
-	cl := color_white
+	cl := colorWhite
 	switch lvl {
 	case diffWeightLow:
-		cl = color_blue
+		cl = colorBlue
 	case diffWeightMedium:
-		cl = color_yellow
+		cl = colorYellow
 	case diffWeightHigh:
-		cl = color_red
+		cl = colorRed
 	}
 	return cl
 }

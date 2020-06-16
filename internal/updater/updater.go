@@ -17,6 +17,7 @@ const (
 	vendorFolder = "vendor"
 )
 
+//Updater manages execution of update processes
 type Updater struct {
 	exc *executor.Executor
 	hnd *module.Handler

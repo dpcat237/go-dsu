@@ -16,6 +16,7 @@ var rootCmd = &cobra.Command{
 	Long:  `Go DSU - provides tools to update Go dependencies with more control than default Go modules.`,
 }
 
+//Execute builds CLI commands
 func Execute() {
 	if err := rootCmd.Execute(); err != nil {
 		fmt.Println(err)

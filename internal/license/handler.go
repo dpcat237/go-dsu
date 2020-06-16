@@ -17,6 +17,7 @@ import (
 
 const confidenceThreshold = float64(0.9)
 
+//Handler handles functions related to license identification
 type Handler struct {
 	cls *licenseclassifier.License
 	lgr *logger.Logger

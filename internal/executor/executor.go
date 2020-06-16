@@ -16,6 +16,7 @@ const (
 	pkg = "executor"
 )
 
+//Executor executes CLI commands
 type Executor struct {
 	goPath      string
 	lgr         *logger.Logger
@@ -59,7 +60,6 @@ func (exc Executor) ExecGlobal(cmdStr string) (Response, output.Output) {
 	}
 	rsp.StdOutput = cmdOut.Bytes()
 	rsp.StdError = cmdErr.Bytes()
-	out.SetCmdSuccessful(cmd.ProcessState.Success())
 
 	return rsp, out
 }
@@ -81,7 +81,6 @@ func (exc Executor) ExecProject(atr string) (Response, output.Output) {
 	}
 	rsp.StdOutput = cmdOut.Bytes()
 	rsp.StdError = cmdErr.Bytes()
-	out.SetCmdSuccessful(cmd.ProcessState.Success())
 
 	return rsp, out
 }

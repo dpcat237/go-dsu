@@ -5,11 +5,6 @@ import (
 	"fmt"
 )
 
-const (
-	ModeProd Mode = iota + 1
-	ModeDev
-)
-
 // Output collects error and/or response, and print them by specified mode.
 type Output struct {
 	error      error
@@ -18,34 +13,29 @@ type Output struct {
 	response   string
 }
 
-type Mode uint16
-
+//Create creates Output object
 func Create(mtd string) Output {
 	return Output{
 		method: mtd,
 	}
 }
 
+//GetError returns an error from Output
 func (out Output) GetError() error {
 	return out.error
 }
 
+//HasError check if Output has an error
 func (out Output) HasError() bool {
 	return out.error != nil
 }
 
-func (out Output) IsCmdSuccessful() bool {
-	return out.cmdSuccess
-}
-
-func (out Output) SetCmdSuccessful(sc bool) {
-	out.cmdSuccess = sc
-}
-
+// String returns Output as string wrapping method and error
 func (out Output) String() string {
 	return fmt.Sprintf("[%s] %s", out.method, out.error)
 }
 
+//ToString returns Output as string by specified mode
 func (out Output) ToString(md Mode) string {
 	if !out.HasError() {
 		return out.response
@@ -57,26 +47,20 @@ func (out Output) ToString(md Mode) string {
 	return fmt.Sprintf("%s", out.error)
 }
 
+//WithError adds an error to Output and returns same Output
 func (out Output) WithError(err error) Output {
 	out.error = err
 	return out
 }
 
-func (out Output) WithErrorPrefix(msg string) Output {
-	out.error = fmt.Errorf("%s: \n%s", msg, out.error)
-	return out
-}
-
+//WithErrorString adds an error from string to Output and returns same Output
 func (out Output) WithErrorString(msg string) Output {
 	out.error = errors.New(msg)
 	return out
 }
 
+//WithResponse adds response message to Output and returns same Output
 func (out Output) WithResponse(rsp string) Output {
 	out.response = rsp
 	return out
-}
-
-func (md Mode) IsProduction() bool {
-	return md == ModeProd
 }
