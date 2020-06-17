@@ -7,10 +7,9 @@ import (
 
 // Output collects error and/or response, and print them by specified mode.
 type Output struct {
-	error      error
-	method     string
-	cmdSuccess bool
-	response   string
+	error    error
+	method   string
+	response string
 }
 
 //Create creates Output object

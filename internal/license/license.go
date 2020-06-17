@@ -56,6 +56,11 @@ func (lic License) Found() bool {
 	return lic.Hash != ""
 }
 
+//IsCritical checks if license has critical restrictions
+func (lic License) IsCritical() bool {
+	return lic.Type == Restricted || lic.Type == Forbidden
+}
+
 // IsMoreRestrictive defines if license if more restrictions comparing licenses types
 func (lic License) IsMoreRestrictive(nTp Type) bool {
 	if lic.Type == nTp {

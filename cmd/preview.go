@@ -12,13 +12,14 @@ import (
 	"github.com/dpcat237/go-dsu/internal/module"
 	"github.com/dpcat237/go-dsu/internal/output"
 	"github.com/dpcat237/go-dsu/internal/previewer"
+	"github.com/dpcat237/go-dsu/internal/vulnerability"
 )
 
 var (
 	previewCmd = &cobra.Command{
 		Use:   "preview",
 		Short: "Preview updates",
-		Long:  `Preview available updates of direct modules`,
+		Long:  `Preview available updates of direct modules with changes`,
 		Run: func(cmd *cobra.Command, args []string) {
 			preview(cmd)
 		},
@@ -60,7 +61,8 @@ func preview(cmd *cobra.Command) {
 		os.Exit(1)
 	}
 
-	hnd := module.InitHandler(exc, lgr, licHnd)
+	vlnHnd := vulnerability.InitHandler(lgr)
+	hnd := module.InitHandler(exc, lgr, licHnd, vlnHnd)
 	upd := previewer.Init(exc, lgr, hnd)
 	out := upd.Preview(cmd.Flag("path").Value.String())
 	fmt.Println(out.ToString(mod))

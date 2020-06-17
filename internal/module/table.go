@@ -13,6 +13,7 @@ const (
 	colorBlue
 	colorYellow
 	colorRed
+	colorRedBg
 )
 
 var tableHeader = []string{"Direct Module", "Version", "New Version", "Changes"}
@@ -82,6 +83,8 @@ func (md Module) cellColor(clTp tableColor) tablewriter.Colors {
 		cl = tablewriter.FgYellowColor
 	case colorRed:
 		cl = tablewriter.FgHiRedColor
+	case colorRedBg:
+		cl = tablewriter.BgRedColor
 	}
 	return tablewriter.Colors{tablewriter.Normal, cl}
 }
@@ -107,10 +110,12 @@ func (md Module) differenceToString(dff Difference) string {
 		ln = fmt.Sprintf("- License %s would be removed in %s", dff.Module.License.Name, dff.ModuleUpdate)
 	case diffTypeNewSubmodule:
 		if dff.Module.License.Name == "" {
-			ln = fmt.Sprintf("- Would be added new submodule %s with unknown license", dff.Module)
+			ln = fmt.Sprintf("- Would be added new indirect module %s with unknown license", dff.Module)
 		} else {
-			ln = fmt.Sprintf("- Would be added new submodule %s with license %s", dff.Module, dff.Module.License.Name)
+			ln = fmt.Sprintf("- Would be added new indirect module %s with license %s", dff.Module, dff.Module.License.Name)
 		}
+	case diffTypeNewVulnerability:
+		ln = fmt.Sprintf("- Update of module %s has vulnerability %s, more info %s", dff.Module.String(), dff.Vulnerability.Title, dff.Vulnerability.Reference)
 	}
 	return ln
 }
@@ -124,6 +129,8 @@ func (md Module) levelToColor(lvl diffLevel) tableColor {
 		cl = colorYellow
 	case diffWeightHigh:
 		cl = colorRed
+	case diffWeightCritical:
+		cl = colorRedBg
 	}
 	return cl
 }

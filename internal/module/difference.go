@@ -1,10 +1,14 @@
 package module
 
+import (
+	"github.com/dpcat237/go-dsu/internal/vulnerability"
+)
+
 const (
-	diffWeightNone = diffLevel(iota)
-	diffWeightLow
+	diffWeightLow = diffLevel(iota)
 	diffWeightMedium
 	diffWeightHigh
+	diffWeightCritical
 )
 
 const (
@@ -17,6 +21,7 @@ const (
 	diffTypeLicenseMoreStrictChanged
 	diffTypeLicenseRemoved
 	diffTypeNewSubmodule
+	diffTypeNewVulnerability
 )
 
 type diffLevel uint16
@@ -24,17 +29,28 @@ type diffType uint16
 
 // Difference contains differences between module versions
 type Difference struct {
-	Module       Module
-	ModuleUpdate Module
-	Level        diffLevel
-	Type         diffType
+	Level         diffLevel
+	Module        Module
+	ModuleUpdate  Module
+	Type          diffType
+	Vulnerability vulnerability.Vulnerability
 }
 
 // Differences contains multiple differences
 type Differences []Difference
 
-// AddDifference adds difference details with module and available update
-func (dffs *Differences) AddDifference(md, mdUp Module, dfLv diffLevel, dfTp diffType) {
+// AddModule adds difference of module
+func (dffs *Differences) AddModule(md Module, dfLv diffLevel, dfTp diffType) {
+	dif := Difference{
+		Module: md,
+		Level:  dfLv,
+		Type:   dfTp,
+	}
+	*dffs = append(*dffs, dif)
+}
+
+// AddModules adds difference details with module and available update
+func (dffs *Differences) AddModules(md, mdUp Module, dfLv diffLevel, dfTp diffType) {
 	df := Difference{
 		Module:       md,
 		ModuleUpdate: mdUp,
@@ -44,12 +60,13 @@ func (dffs *Differences) AddDifference(md, mdUp Module, dfLv diffLevel, dfTp dif
 	*dffs = append(*dffs, df)
 }
 
-// AddModule adds difference of module
-func (dffs *Differences) AddModule(md Module, dfLv diffLevel, dfTp diffType) {
+// AddVulnerability adds difference of vulnerability
+func (dffs *Differences) AddVulnerability(md Module, vln vulnerability.Vulnerability) {
 	dif := Difference{
-		Module: md,
-		Level:  dfLv,
-		Type:   dfTp,
+		Level:         dffs.vulnerabilityLevel(vln),
+		Module:        md,
+		Type:          diffTypeNewVulnerability,
+		Vulnerability: vln,
 	}
 	*dffs = append(*dffs, dif)
 }
@@ -62,4 +79,18 @@ func (dffs Differences) highestLevel() diffLevel {
 		}
 	}
 	return lvl
+}
+
+func (dffs Differences) vulnerabilityLevel(vln vulnerability.Vulnerability) diffLevel {
+	switch vln.Severity() {
+	case vulnerability.SeverityLow:
+		return diffWeightLow
+	case vulnerability.SeverityMedium:
+		return diffWeightMedium
+	case vulnerability.SeverityHigh:
+		return diffWeightHigh
+	case vulnerability.SeverityCritical:
+		return diffWeightCritical
+	}
+	return diffWeightCritical
 }

@@ -12,6 +12,7 @@ import (
 	"github.com/dpcat237/go-dsu/internal/module"
 	"github.com/dpcat237/go-dsu/internal/output"
 	"github.com/dpcat237/go-dsu/internal/updater"
+	"github.com/dpcat237/go-dsu/internal/vulnerability"
 )
 
 var (
@@ -77,7 +78,8 @@ func update(cmd *cobra.Command) {
 		os.Exit(1)
 	}
 
-	hnd := module.InitHandler(exc, lgr, licHnd)
+	vlnHnd := vulnerability.InitHandler(lgr)
+	hnd := module.InitHandler(exc, lgr, licHnd, vlnHnd)
 	upd := updater.Init(exc, hnd)
 	out = upd.UpdateModules(ind, scl, tst, vrb)
 	fmt.Println(out.ToString(mod))

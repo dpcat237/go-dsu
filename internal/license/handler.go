@@ -62,7 +62,7 @@ func (hnd Handler) FindLicense(dir string) License {
 // IdentifyType identifies license name and type
 func (hnd Handler) IdentifyType(lic *License) {
 	if lic.Path == "" {
-		hnd.lgr.Debug(fmt.Sprintf("Empty path during license identification"))
+		hnd.lgr.Debug("Empty path during license identification")
 		return
 	}
 	content, err := ioutil.ReadFile(lic.Path)
@@ -72,7 +72,7 @@ func (hnd Handler) IdentifyType(lic *License) {
 	}
 	matches := hnd.cls.MultipleMatch(string(content), true)
 	if len(matches) == 0 {
-		hnd.lgr.Debug(fmt.Sprintf("Unknown license during license identification"))
+		hnd.lgr.Debug("Unknown license during license identification")
 		return
 	}
 
