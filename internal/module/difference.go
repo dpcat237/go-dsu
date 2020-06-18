@@ -5,23 +5,37 @@ import (
 )
 
 const (
-	diffWeightLow = diffLevel(iota)
-	diffWeightMedium
-	diffWeightHigh
-	diffWeightCritical
+	//DiffWeightLow difference with low severity
+	DiffWeightLow = diffLevel(iota)
+	//DiffWeightMedium difference with medium severity
+	DiffWeightMedium
+	//DiffWeightHigh difference with high severity
+	DiffWeightHigh
+	//DiffWeightCritical difference with critical severity
+	DiffWeightCritical
 )
 
 const (
-	diffTypeModuleFetchError = diffType(iota)
-	diffTypeLicenseNotFound
-	diffTypeLicenseAdded
-	diffTypeLicenseMinorChanges
-	diffTypeLicenseNameChanged
-	diffTypeLicenseLessStrictChanged
-	diffTypeLicenseMoreStrictChanged
-	diffTypeLicenseRemoved
-	diffTypeNewSubmodule
-	diffTypeNewVulnerability
+	//DiffTypeModuleFetchError error during module fetch
+	DiffTypeModuleFetchError = diffType(iota)
+	//DiffTypeLicenseNotFound license not found
+	DiffTypeLicenseNotFound
+	//DiffTypeLicenseAdded license added
+	DiffTypeLicenseAdded
+	//DiffTypeLicenseMinorChanges minor changes in license
+	DiffTypeLicenseMinorChanges
+	//DiffTypeLicenseNameChanged changed license name
+	DiffTypeLicenseNameChanged
+	//DiffTypeLicenseLessStrictChanged changed license to less strict
+	DiffTypeLicenseLessStrictChanged
+	//DiffTypeLicenseMoreStrictChanged  changed license to more strict
+	DiffTypeLicenseMoreStrictChanged
+	//DiffTypeLicenseRemoved license removed
+	DiffTypeLicenseRemoved
+	//DiffTypeNewSubmodule new submodule
+	DiffTypeNewSubmodule
+	//DiffTypeNewVulnerability new vulnerability
+	DiffTypeNewVulnerability
 )
 
 type diffLevel uint16
@@ -65,7 +79,7 @@ func (dffs *Differences) AddVulnerability(md Module, vln vulnerability.Vulnerabi
 	dif := Difference{
 		Level:         dffs.vulnerabilityLevel(vln),
 		Module:        md,
-		Type:          diffTypeNewVulnerability,
+		Type:          DiffTypeNewVulnerability,
 		Vulnerability: vln,
 	}
 	*dffs = append(*dffs, dif)
@@ -84,13 +98,13 @@ func (dffs Differences) highestLevel() diffLevel {
 func (dffs Differences) vulnerabilityLevel(vln vulnerability.Vulnerability) diffLevel {
 	switch vln.Severity() {
 	case vulnerability.SeverityLow:
-		return diffWeightLow
+		return DiffWeightLow
 	case vulnerability.SeverityMedium:
-		return diffWeightMedium
+		return DiffWeightMedium
 	case vulnerability.SeverityHigh:
-		return diffWeightHigh
+		return DiffWeightHigh
 	case vulnerability.SeverityCritical:
-		return diffWeightCritical
+		return DiffWeightCritical
 	}
-	return diffWeightCritical
+	return DiffWeightCritical
 }

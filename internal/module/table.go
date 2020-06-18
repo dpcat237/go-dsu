@@ -92,29 +92,29 @@ func (md Module) cellColor(clTp tableColor) tablewriter.Colors {
 func (md Module) differenceToString(dff Difference) string {
 	var ln string
 	switch dff.Type {
-	case diffTypeModuleFetchError:
+	case DiffTypeModuleFetchError:
 		ln = fmt.Sprintf("- Error fetching - %s", dff.Module)
-	case diffTypeLicenseNotFound:
+	case DiffTypeLicenseNotFound:
 		ln = fmt.Sprintf("- License not found - %s", dff.Module)
-	case diffTypeLicenseAdded:
+	case DiffTypeLicenseAdded:
 		ln = fmt.Sprintf("- License %s would be added in update of %s", dff.ModuleUpdate.License.Name, dff.Module)
-	case diffTypeLicenseMinorChanges:
+	case DiffTypeLicenseMinorChanges:
 		ln = fmt.Sprintf("- Minor changes in license %s from %s to %s", dff.ModuleUpdate.License.Name, dff.Module, dff.ModuleUpdate)
-	case diffTypeLicenseNameChanged:
+	case DiffTypeLicenseNameChanged:
 		ln = fmt.Sprintf("- License would change from %s in %s to %s in %s", dff.Module.License.Name, dff.Module, dff.ModuleUpdate.License.Name, dff.ModuleUpdate)
-	case diffTypeLicenseLessStrictChanged:
+	case DiffTypeLicenseLessStrictChanged:
 		ln = fmt.Sprintf("- License would change to less strictive, from %s in %s to %s in %s", dff.Module.License.Name, dff.Module, dff.ModuleUpdate.License.Name, dff.ModuleUpdate)
-	case diffTypeLicenseMoreStrictChanged:
+	case DiffTypeLicenseMoreStrictChanged:
 		ln = fmt.Sprintf("- License would change to more strictive, from %s in %s to %s in %s", dff.Module.License.Name, dff.Module, dff.ModuleUpdate.License.Name, dff.ModuleUpdate)
-	case diffTypeLicenseRemoved:
+	case DiffTypeLicenseRemoved:
 		ln = fmt.Sprintf("- License %s would be removed in %s", dff.Module.License.Name, dff.ModuleUpdate)
-	case diffTypeNewSubmodule:
+	case DiffTypeNewSubmodule:
 		if dff.Module.License.Name == "" {
 			ln = fmt.Sprintf("- Would be added new indirect module %s with unknown license", dff.Module)
 		} else {
 			ln = fmt.Sprintf("- Would be added new indirect module %s with license %s", dff.Module, dff.Module.License.Name)
 		}
-	case diffTypeNewVulnerability:
+	case DiffTypeNewVulnerability:
 		ln = fmt.Sprintf("- Update of module %s has vulnerability %s, more info %s", dff.Module.String(), dff.Vulnerability.Title, dff.Vulnerability.Reference)
 	}
 	return ln
@@ -123,13 +123,13 @@ func (md Module) differenceToString(dff Difference) string {
 func (md Module) levelToColor(lvl diffLevel) tableColor {
 	cl := colorWhite
 	switch lvl {
-	case diffWeightLow:
+	case DiffWeightLow:
 		cl = colorBlue
-	case diffWeightMedium:
+	case DiffWeightMedium:
 		cl = colorYellow
-	case diffWeightHigh:
+	case DiffWeightHigh:
 		cl = colorRed
-	case diffWeightCritical:
+	case DiffWeightCritical:
 		cl = colorRedBg
 	}
 	return cl

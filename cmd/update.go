@@ -7,12 +7,10 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/dpcat237/go-dsu/internal/executor"
-	"github.com/dpcat237/go-dsu/internal/license"
 	"github.com/dpcat237/go-dsu/internal/logger"
 	"github.com/dpcat237/go-dsu/internal/module"
 	"github.com/dpcat237/go-dsu/internal/output"
 	"github.com/dpcat237/go-dsu/internal/updater"
-	"github.com/dpcat237/go-dsu/internal/vulnerability"
 )
 
 var (
@@ -72,14 +70,7 @@ func update(cmd *cobra.Command) {
 		os.Exit(1)
 	}
 
-	licHnd, licHndOut := license.InitHandler(lgr)
-	if licHndOut.HasError() {
-		fmt.Println(licHndOut.ToString(mod))
-		os.Exit(1)
-	}
-
-	vlnHnd := vulnerability.InitHandler(lgr)
-	hnd := module.InitHandler(exc, lgr, licHnd, vlnHnd)
+	hnd := module.InitHandler(exc)
 	upd := updater.Init(exc, hnd)
 	out = upd.UpdateModules(ind, scl, tst, vrb)
 	fmt.Println(out.ToString(mod))

@@ -63,6 +63,9 @@ func (md Module) HasUpdate() bool {
 
 // String returns the path and version of current module
 func (md Module) String() string {
+	if md.Version == "" {
+		return md.Path
+	}
 	return fmt.Sprintf("%s@%s", md.Path, md.Version)
 }
 

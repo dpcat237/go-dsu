@@ -6,6 +6,7 @@ import (
 
 	"github.com/spf13/cobra"
 
+	"github.com/dpcat237/go-dsu/internal/download"
 	"github.com/dpcat237/go-dsu/internal/executor"
 	"github.com/dpcat237/go-dsu/internal/license"
 	"github.com/dpcat237/go-dsu/internal/logger"
@@ -61,9 +62,10 @@ func preview(cmd *cobra.Command) {
 		os.Exit(1)
 	}
 
+	dwnHnd := download.InitHandler(exc)
 	vlnHnd := vulnerability.InitHandler(lgr)
-	hnd := module.InitHandler(exc, lgr, licHnd, vlnHnd)
-	upd := previewer.Init(exc, lgr, hnd)
-	out := upd.Preview(cmd.Flag("path").Value.String())
+	hnd := module.InitHandler(exc)
+	prw := previewer.Init(dwnHnd, exc, lgr, licHnd, hnd, vlnHnd)
+	out := prw.Preview(cmd.Flag("path").Value.String())
 	fmt.Println(out.ToString(mod))
 }
