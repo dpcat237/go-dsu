@@ -46,6 +46,7 @@ func (hnd Preview) Preview(pth string) output.Output {
 	out := output.Create(pkg + ".Preview")
 	bar := progressbar.Default(100)
 
+	hnd.dwnHnd.CleanTemporaryData()
 	if err := bar.Add(5); err != nil {
 		return out.WithError(err)
 	}
@@ -56,7 +57,6 @@ func (hnd Preview) Preview(pth string) output.Output {
 		}
 	}
 
-	fmt.Println("Discovering modules...")
 	mds, mdsOut := hnd.mdHnd.ListAvailable(true)
 	if mdsOut.HasError() {
 		return mdsOut
@@ -70,16 +70,16 @@ func (hnd Preview) Preview(pth string) output.Output {
 		return out.WithError(err)
 	}
 
-	var wg sync.WaitGroup
-	tt := len(mds)
-	each := 90 / tt
 	if len(mds) > 0 {
 		defer hnd.dwnHnd.CleanTemporaryData()
 	}
+
+	var wg sync.WaitGroup
+	tt := len(mds)
+	each := 90 / tt
 	for k := range mds {
 		wg.Add(1)
 		go func(md *module.Module, wg *sync.WaitGroup, bar *progressbar.ProgressBar) {
-			defer wg.Done()
 			dfs, dfsOut := hnd.analyzeUpdateDifferences(*md)
 			if dfsOut.HasError() {
 				hnd.lgr.Debug(dfsOut.String())
@@ -92,6 +92,7 @@ func (hnd Preview) Preview(pth string) output.Output {
 			if err := bar.Add(each); err != nil {
 				hnd.lgr.Debug(err.Error())
 			}
+			wg.Done()
 		}(&mds[k], &wg, bar)
 	}
 

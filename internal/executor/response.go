@@ -1,5 +1,11 @@
 package executor
 
+import "strings"
+
+const (
+	escapeGoDownload = "go: downloading"
+)
+
 //Response contains information returned from CLI command
 type Response struct {
 	StdOutput []byte
@@ -8,7 +14,7 @@ type Response struct {
 
 //HasError checks if Response has an error
 func (rsp Response) HasError() bool {
-	return len(rsp.StdError) > 0
+	return len(rsp.StdError) > 0 && !strings.Contains(string(rsp.StdError), escapeGoDownload)
 }
 
 //IsEmpty checks if Response's output is empty

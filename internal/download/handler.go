@@ -92,6 +92,13 @@ func (hnd Handler) FolderAccessible(pth string) bool {
 	return true
 }
 
+func (hnd Handler) cleanVersion(vr string) string {
+	if strings.Contains(vr, "+") {
+		return strings.ReplaceAll(vr, "+", "_")
+	}
+	return vr
+}
+
 func (hnd Handler) gitDownload(mdPth string) (string, output.Output) {
 	out := output.Create(pkg + ".gitDownload")
 
@@ -155,19 +162,20 @@ func (hnd Handler) modDownload(mdPth string) (string, output.Output) {
 
 func (hnd Handler) transformModulePath(mdPth string) (details, error) {
 	var dt details
+	pth := mdPth
 	if strings.Contains(mdPth, "@") {
 		prts := strings.Split(mdPth, "@")
-		mdPth = prts[0]
+		pth = prts[0]
 		dt.version = prts[1]
 	}
 
-	uri, err := url.Parse("https://" + mdPth)
+	uri, err := url.Parse("https://" + pth)
 	if err != nil {
 		return dt, err
 	}
 
 	dt.vcs = fmt.Sprintf("git@%s:%s.git", uri.Host, uri.Path)
-	dt.tempDir = fmt.Sprintf("%s/%s/%s", os.TempDir(), baseTmpFolder, mdPth)
+	dt.tempDir = fmt.Sprintf("%s/%s/%s", os.TempDir(), baseTmpFolder, hnd.cleanVersion(mdPth))
 
 	return dt, nil
 }
