@@ -73,6 +73,9 @@ func (hnd Preview) Preview(pth string) output.Output {
 	var wg sync.WaitGroup
 	tt := len(mds)
 	each := 90 / tt
+	if len(mds) > 0 {
+		defer hnd.dwnHnd.CleanTemporaryData()
+	}
 	for k := range mds {
 		wg.Add(1)
 		go func(md *module.Module, wg *sync.WaitGroup, bar *progressbar.ProgressBar) {
@@ -321,7 +324,7 @@ func (hnd Preview) updateDifferencesSubModules(subMds, subUpMds module.Modules, 
 //updateDir checks that module's directory is accessible and downloads if it isn't
 func (hnd Preview) updateDir(md *module.Module) output.Output {
 	out := output.Create(fmt.Sprintf("%s.%s '%s'", pkg, "updateDir", md))
-	if md.Dir == "" || !hnd.exc.FolderAccessible(md.Dir) {
+	if md.Dir == "" || !hnd.dwnHnd.FolderAccessible(md.Dir) {
 		dir, dirOut := hnd.dwnHnd.DownloadModule(md.String())
 		if dirOut.HasError() {
 			return dirOut

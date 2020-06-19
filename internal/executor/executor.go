@@ -11,8 +11,6 @@ import (
 )
 
 const (
-	cmdPermissions = "(cd %s && go list -m -mod=mod -json)"
-
 	pkg = "executor"
 )
 
@@ -56,7 +54,7 @@ func (exc Executor) ExecGlobal(cmdStr string) (Response, output.Output) {
 	cmd.Stderr = &cmdErr
 
 	if err := cmd.Run(); err != nil {
-		return rsp, out.WithErrorString(fmt.Sprintf("Error %s executing %s ", err.Error(), cmdStr))
+		return rsp, out.WithErrorString(fmt.Sprintf("Error executing %s with output: %s", cmdStr, cmdOut.Bytes()))
 	}
 	rsp.StdOutput = cmdOut.Bytes()
 	rsp.StdError = cmdErr.Bytes()
@@ -77,7 +75,7 @@ func (exc Executor) ExecProject(atr string) (Response, output.Output) {
 	cmd.Stderr = &cmdErr
 
 	if err := cmd.Run(); err != nil {
-		return rsp, out.WithErrorString(fmt.Sprintf("Error %s executing %s ", err.Error(), cmdStr))
+		return rsp, out.WithErrorString(fmt.Sprintf("Error executing %s with output: %s", cmdStr, cmdOut.Bytes()))
 	}
 	rsp.StdOutput = cmdOut.Bytes()
 	rsp.StdError = cmdErr.Bytes()
@@ -88,22 +86,6 @@ func (exc Executor) ExecProject(atr string) (Response, output.Output) {
 // ExistsInProject checks if file/folder of project exists
 func (exc Executor) ExistsInProject(pth string) bool {
 	if _, err := os.Stat(fmt.Sprintf("%s/%s", exc.projectPath, pth)); os.IsNotExist(err) {
-		return false
-	}
-	return true
-}
-
-// FolderAccessible verifies that provided folder is accessible and allow commands execution
-func (exc Executor) FolderAccessible(pth string) bool {
-	if pth == "" {
-		return false
-	}
-
-	if _, err := os.Stat(pth); os.IsNotExist(err) {
-		return false
-	}
-
-	if _, out := exc.ExecGlobal(fmt.Sprintf(cmdPermissions, pth)); out.HasError() {
 		return false
 	}
 	return true

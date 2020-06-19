@@ -3,6 +3,7 @@ package output
 import (
 	"errors"
 	"fmt"
+	"strings"
 )
 
 // Output collects error and/or response, and print them by specified mode.
@@ -17,6 +18,11 @@ func Create(mtd string) Output {
 	return Output{
 		method: mtd,
 	}
+}
+
+//ErrorContainsString check if Output error contains string
+func (out Output) ErrorContainsString(str string) bool {
+	return strings.Contains(out.error.Error(), str)
 }
 
 //GetError returns an error from Output

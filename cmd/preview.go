@@ -62,7 +62,7 @@ func preview(cmd *cobra.Command) {
 		os.Exit(1)
 	}
 
-	dwnHnd := download.InitHandler(exc)
+	dwnHnd := download.InitHandler(exc, lgr)
 	vlnHnd := vulnerability.InitHandler(lgr)
 	hnd := module.InitHandler(exc)
 	prw := previewer.Init(dwnHnd, exc, lgr, licHnd, hnd, vlnHnd)
