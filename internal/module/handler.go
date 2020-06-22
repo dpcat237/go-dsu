@@ -28,7 +28,7 @@ func InitHandler(exc *executor.Executor) *Handler {
 }
 
 // ListAvailable list modules with available updates
-func (hnd Handler) ListAvailable(direct bool) (Modules, output.Output) {
+func (hnd Handler) ListAvailable(direct, withUpdate bool) (Modules, output.Output) {
 	var mds Modules
 	out := output.Create(pkg + ".ListAvailable")
 
@@ -43,7 +43,7 @@ func (hnd Handler) ListAvailable(direct bool) (Modules, output.Output) {
 		return mds, out.WithErrorString("Not found any dependency")
 	}
 
-	return hnd.bytesToModules(excRsp.StdOutput, direct, true)
+	return hnd.bytesToModules(excRsp.StdOutput, direct, withUpdate)
 }
 
 //ListSubModules return submodules (indirect modules)

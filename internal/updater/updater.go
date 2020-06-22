@@ -35,7 +35,7 @@ func Init(exc *executor.Executor, hnd *module.Handler) *Updater {
 func (upd Updater) UpdateModules(all, sct, tst, vrb bool) output.Output {
 	out := output.Create(pkg + ".UpdateModules")
 
-	mds, mdsOut := upd.hnd.ListAvailable(true)
+	mds, mdsOut := upd.hnd.ListAvailable(true, true)
 	if mdsOut.HasError() {
 		return mdsOut
 	}

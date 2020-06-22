@@ -1,7 +1,11 @@
-# v0.7.0 (2020.06.16)
+# v0.8.0 (2020.06.22)
 
 #### Features
 - Add progress bar for preview command
+- Add critical severity
+- Implement vulnerabilities check from OSS Index for preview command
+- Implement modules download with Git
+- Implement analyze command
 
 # v0.6.0 (2020.06.15)
 

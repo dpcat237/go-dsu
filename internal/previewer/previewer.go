@@ -57,7 +57,7 @@ func (hnd Preview) Preview(pth string) output.Output {
 		}
 	}
 
-	mds, mdsOut := hnd.mdHnd.ListAvailable(true)
+	mds, mdsOut := hnd.mdHnd.ListAvailable(true, true)
 	if mdsOut.HasError() {
 		return mdsOut
 	}
@@ -101,7 +101,7 @@ func (hnd Preview) Preview(pth string) output.Output {
 		return out.WithError(err)
 	}
 
-	return out.WithResponse(mds.ToTable())
+	return out.WithResponse(mds.ToPreviewTable())
 }
 
 func (hnd Preview) addLicenseDifferences(md, mdUp module.Module, dffs *module.Differences) output.Output {

@@ -17,6 +17,8 @@ const (
 
 //Details contains additional information about module
 type Details struct {
+	Dependencies      []Module
+	DependenciesMap   map[string]Module
 	License           license.License
 	UpdateDifferences Differences
 	Vulnerabilities   vulnerability.Vulnerabilities

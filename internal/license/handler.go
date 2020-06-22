@@ -24,18 +24,10 @@ type Handler struct {
 }
 
 // InitHandler initializes handler of licenses
-func InitHandler(lgr *logger.Logger) (*Handler, output.Output) {
-	out := output.Create(pkg + ".InitHandler")
-	var hnd Handler
-
-	cls, err := licenseclassifier.New(confidenceThreshold)
-	if err != nil {
-		return nil, out.WithError(err)
+func InitHandler(lgr *logger.Logger) *Handler {
+	return &Handler{
+		lgr: lgr,
 	}
-	hnd.cls = cls
-	hnd.lgr = lgr
-
-	return &hnd, out
 }
 
 // FindLicense looks for a license in given directory
@@ -78,6 +70,18 @@ func (hnd Handler) IdentifyType(lic *License) {
 
 	lic.Name = matches[0].Name
 	lic.Type = Type(licenseclassifier.LicenseType(lic.Name))
+}
+
+//InitializeClassifier Initialize licenses classifier
+func (hnd *Handler) InitializeClassifier() output.Output {
+	out := output.Create(pkg + ".InitializeClassifier")
+
+	cls, err := licenseclassifier.New(confidenceThreshold)
+	if err != nil {
+		return out.WithError(err)
+	}
+	hnd.cls = cls
+	return out
 }
 
 func (hnd Handler) fileHash(flPath string) (string, output.Output) {
