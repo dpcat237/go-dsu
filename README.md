@@ -1,5 +1,3 @@
-#### WIP - project is in beta stage of development. Use it with caution.
-
 ## Overview
 
 Go DSU - provides tools to update Go dependencies with more control than default Go tools. It isn't stable yet. Use it with caution, and any feedback would be very appreciated.  
@@ -14,7 +12,7 @@ Go DSU works on base of Go modules and Git. Git uses public SSH key for access t
 - [x] Check vulnerabilities from OSS Index
 - [x] Adapt download with Git for not a known dependency
 - [x] Current command (analyze) - list all current licenses / vulnerabilities of dependencies
-- [ ] Implement more tests
+- [ ] Implement more tests and improve documentation
 
 ## Installation
 
