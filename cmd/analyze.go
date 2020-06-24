@@ -4,17 +4,10 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/dpcat237/go-dsu/internal/analyzer"
-
 	"github.com/spf13/cobra"
 
-	"github.com/dpcat237/go-dsu/internal/download"
-	"github.com/dpcat237/go-dsu/internal/executor"
-	"github.com/dpcat237/go-dsu/internal/license"
-	"github.com/dpcat237/go-dsu/internal/logger"
-	"github.com/dpcat237/go-dsu/internal/module"
 	"github.com/dpcat237/go-dsu/internal/output"
-	"github.com/dpcat237/go-dsu/internal/vulnerability"
+	"github.com/dpcat237/go-dsu/internal/service"
 )
 
 var (
@@ -46,23 +39,12 @@ func analyze(cmd *cobra.Command) {
 		return
 	}
 
-	lgr, lgrOut := logger.Init(mod)
-	if lgrOut.HasError() {
-		fmt.Println(lgrOut.ToString(mod))
+	anz, initOut := service.InitAnalyzer(mod)
+	if initOut.HasError() {
+		fmt.Println(initOut.ToString(mod))
 		os.Exit(1)
 	}
 
-	exc, excOut := executor.Init(lgr)
-	if excOut.HasError() {
-		fmt.Println(excOut.ToString(mod))
-		os.Exit(1)
-	}
-
-	licHnd := license.InitHandler(lgr)
-	dwnHnd := download.InitHandler(exc, lgr)
-	vlnHnd := vulnerability.InitHandler(lgr)
-	hnd := module.InitHandler(exc)
-	anz := analyzer.Init(dwnHnd, exc, lgr, licHnd, hnd, vlnHnd)
 	out := anz.AnalyzeDependencies(cmd.Flag("path").Value.String())
 	fmt.Println(out.ToString(mod))
 }
