@@ -64,9 +64,10 @@ func (hnd Preview) Preview(pth string) output.Output {
 		return out.WithError(err)
 	}
 
-	if len(mds) > 0 {
-		defer hnd.dwnHnd.CleanTemporaryData()
+	if clsOut := hnd.cmpHnd.InitializeClassifiers(); out.HasError() {
+		return clsOut
 	}
+	defer hnd.dwnHnd.CleanTemporaryData()
 
 	var wg sync.WaitGroup
 	tt := len(mds)

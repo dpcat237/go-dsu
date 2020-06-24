@@ -54,7 +54,7 @@ func (exc Executor) ExecGlobal(cmdStr string) (Response, output.Output) {
 	cmd.Stderr = &cmdErr
 
 	if err := cmd.Run(); err != nil {
-		return rsp, out.WithErrorString(fmt.Sprintf("Error executing %s with output: %s", cmdStr, cmdOut.Bytes()))
+		return rsp, out.WithErrorString(fmt.Sprintf("Error executing %s with output: %s%s", cmdStr, cmdErr.Bytes(), cmdOut.Bytes()))
 	}
 	rsp.StdOutput = cmdOut.Bytes()
 	rsp.StdError = cmdErr.Bytes()
@@ -75,7 +75,7 @@ func (exc Executor) ExecProject(atr string) (Response, output.Output) {
 	cmd.Stderr = &cmdErr
 
 	if err := cmd.Run(); err != nil {
-		return rsp, out.WithErrorString(fmt.Sprintf("Error executing %s with output: %s", cmdStr, cmdOut.Bytes()))
+		return rsp, out.WithErrorString(fmt.Sprintf("Error executing %s with output: %s%s", cmdStr, cmdErr.Bytes(), cmdOut.Bytes()))
 	}
 	rsp.StdOutput = cmdOut.Bytes()
 	rsp.StdError = cmdErr.Bytes()
@@ -91,7 +91,36 @@ func (exc Executor) ExistsInProject(pth string) bool {
 	return true
 }
 
+//PromptConfirmation display prompt for confirmation
+func (exc Executor) PromptConfirmation(text string) bool {
+	var rsp string
+	fmt.Println(text)
+	if _, err := fmt.Scanf("%s", &rsp); err != nil {
+		exc.lgr.Debug("Error displaying prompt: " + err.Error())
+	}
+	return exc.validatePromptConfirmation(rsp)
+}
+
 // UpdateProjectPath defines projects path
 func (exc *Executor) UpdateProjectPath(prjPath string) {
 	exc.projectPath = prjPath
+}
+
+func (exc Executor) promptConfirmationCorrect() bool {
+	var rsp string
+	fmt.Println("To proceed, enter y or n:")
+	if _, err := fmt.Scanf("%s", &rsp); err != nil {
+		exc.lgr.Debug("Error displaying prompt: " + err.Error())
+	}
+	return exc.validatePromptConfirmation(rsp)
+}
+
+func (exc Executor) validatePromptConfirmation(rsp string) bool {
+	if rsp == "y" || rsp == "yes" {
+		return true
+	}
+	if rsp == "n" || rsp == "no" {
+		return false
+	}
+	return exc.promptConfirmationCorrect()
 }

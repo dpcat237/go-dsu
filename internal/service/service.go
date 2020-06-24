@@ -70,6 +70,11 @@ func InitUpdater(mod output.Mode) (*updater.Updater, output.Output) {
 		return nil, excOut
 	}
 
-	hnd := module.InitHandler(exc)
-	return updater.Init(exc, hnd), out
+	dwnHnd := download.InitHandler(exc, lgr)
+	licHnd := license.InitHandler(lgr)
+	mdHnd := module.InitHandler(exc)
+	vlnHnd := vulnerability.InitHandler(lgr)
+	cmpHnd := compare.Init(dwnHnd, lgr, licHnd, mdHnd, vlnHnd)
+
+	return updater.Init(cmpHnd, dwnHnd, exc, lgr, mdHnd), out
 }

@@ -3,7 +3,10 @@ package updater
 import (
 	"fmt"
 
+	"github.com/dpcat237/go-dsu/internal/compare"
+	"github.com/dpcat237/go-dsu/internal/download"
 	"github.com/dpcat237/go-dsu/internal/executor"
+	"github.com/dpcat237/go-dsu/internal/logger"
 	"github.com/dpcat237/go-dsu/internal/module"
 	"github.com/dpcat237/go-dsu/internal/output"
 )
@@ -19,23 +22,30 @@ const (
 
 //Updater manages execution of update processes
 type Updater struct {
-	exc *executor.Executor
-	hnd *module.Handler
+	cmpHnd *compare.Handler
+	dwnHnd *download.Handler
+	exc    *executor.Executor
+	lgr    *logger.Logger
+	mdHnd  *module.Handler
 }
 
 // Init initializes updater handler
-func Init(exc *executor.Executor, hnd *module.Handler) *Updater {
+func Init(cmpHnd *compare.Handler, dwnHnd *download.Handler, exc *executor.Executor, lgr *logger.Logger, mdHnd *module.Handler) *Updater {
 	return &Updater{
-		exc: exc,
-		hnd: hnd,
+		cmpHnd: cmpHnd,
+		dwnHnd: dwnHnd,
+		exc:    exc,
+		lgr:    lgr,
+		mdHnd:  mdHnd,
 	}
 }
 
 // UpdateModules clean and update dependencies
-func (upd Updater) UpdateModules(all, sct, tst, vrb bool) output.Output {
+func (upd Updater) UpdateModules(all, pmt, sct, tst, vrb bool) output.Output {
 	out := output.Create(pkg + ".UpdateModules")
 
-	mds, mdsOut := upd.hnd.ListAvailable(true, true)
+	upd.dwnHnd.CleanTemporaryData()
+	mds, mdsOut := upd.mdHnd.ListAvailable(true, true)
 	if mdsOut.HasError() {
 		return mdsOut
 	}
@@ -59,7 +69,12 @@ func (upd Updater) UpdateModules(all, sct, tst, vrb bool) output.Output {
 		}
 	}
 
-	return upd.updateDirectModules(mds, tst, vrb)
+	if clsOut := upd.cmpHnd.InitializeClassifiers(); out.HasError() {
+		return clsOut
+	}
+	defer upd.dwnHnd.CleanTemporaryData()
+
+	return upd.updateDirectModules(mds, pmt, tst, vrb)
 }
 
 func (upd Updater) runLocalTests() output.Output {
@@ -130,12 +145,35 @@ func (upd Updater) updateDirectModule(m module.Module, tst, vnd, vrb bool) outpu
 }
 
 // updateDirectModules updates direct modules
-func (upd Updater) updateDirectModules(mds module.Modules, tst, vrb bool) output.Output {
+func (upd Updater) updateDirectModules(mds module.Modules, pmt, tst, vrb bool) output.Output {
 	out := output.Create(pkg + ".updateAll")
 	vnd := upd.exc.ExistsInProject(vendorFolder)
 
-	for _, m := range mds {
-		if mOut := upd.updateDirectModule(m, tst, vnd, vrb); mOut.HasError() {
+	for _, md := range mds {
+		if !pmt {
+			if mOut := upd.updateDirectModule(md, tst, vnd, vrb); mOut.HasError() {
+				return mOut
+			}
+			continue
+		}
+
+		dfs, dfsOut := upd.cmpHnd.AnalyzeUpdateDifferences(md)
+		if dfsOut.HasError() {
+			upd.lgr.Debug(dfsOut.String())
+		}
+		if len(dfs) == 0 {
+			if mOut := upd.updateDirectModule(md, tst, vnd, vrb); mOut.HasError() {
+				return mOut
+			}
+			continue
+		}
+
+		md.UpdateDifferences = dfs
+		fmt.Println(module.Modules{md}.ToPreviewTable())
+		if !upd.exc.PromptConfirmation("Update this module? (y/n):") {
+			continue
+		}
+		if mOut := upd.updateDirectModule(md, tst, vnd, vrb); mOut.HasError() {
 			return mOut
 		}
 	}

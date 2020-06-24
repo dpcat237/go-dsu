@@ -1,9 +1,9 @@
-#### WIP - project it's in early stage of development. Use it with caution.
+#### WIP - project is in beta stage of development. Use it with caution.
 
 ## Overview
 
-Go DSU - provides tools to update Go dependencies with more control than default Go tools.
-It works on base of Go modules.
+Go DSU - provides tools to update Go dependencies with more control than default Go tools. It isn't stable yet. Use it with caution, and any feedback would be very appreciated.  
+Go DSU works on base of Go modules and Git. Git uses public SSH key for access to private repositories.  
 
 ### Implement for first stable version
 - [x] Simple update of direct / indirect modules
@@ -11,9 +11,10 @@ It works on base of Go modules.
 - [x] Allow select modules to update
 - [x] Optionally run local tests before and after update of each module with rollback if tests fail
 - [x] Check if license of direct and indirect dependencies changed
-- [ ] Create table legend for color in table
-- [ ] List license of all dependencies
-- [ ] Cover with tests at least all main functions
+- [x] Check vulnerabilities from OSS Index
+- [x] Adapt download with Git for not a known dependency
+- [x] Current command (analyze) - list all current licenses / vulnerabilities of dependencies
+- [ ] Implement more tests
 
 ## Installation
 
@@ -45,4 +46,4 @@ Use "go-dsu [command] --help" for more information about a command.
 ### Preview available updates with changes
 `$ go-dsu preview`
 
-![](doc/preview.png)
+![](doc/images/preview.png)

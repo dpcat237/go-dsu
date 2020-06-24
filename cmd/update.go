@@ -6,11 +6,8 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/dpcat237/go-dsu/internal/executor"
-	"github.com/dpcat237/go-dsu/internal/logger"
-	"github.com/dpcat237/go-dsu/internal/module"
 	"github.com/dpcat237/go-dsu/internal/output"
-	"github.com/dpcat237/go-dsu/internal/updater"
+	"github.com/dpcat237/go-dsu/internal/service"
 )
 
 var (
@@ -28,6 +25,7 @@ func init() {
 	rootCmd.AddCommand(updateCmd)
 	updateCmd.Flags().Bool("dev", false, "Development mode")
 	updateCmd.Flags().BoolP("indirect", "i", false, "Updater all direct and indirect modules")
+	updateCmd.Flags().BoolP("prompt", "p", false, "Confirm in prompt updates with changes")
 	updateCmd.Flags().BoolP("select", "s", false, "Select direct modules to update")
 	updateCmd.Flags().BoolP("test", "t", false, "Run local tests after updating each module and rollback in case of errors")
 	updateCmd.Flags().BoolP("verbose", "v", false, "Print output")
@@ -35,13 +33,16 @@ func init() {
 
 func update(cmd *cobra.Command) {
 	mod := output.ModeProd
-	var ind, scl, tst, vrb bool
+	var ind, pmt, scl, tst, vrb bool
 
 	if cmd.Flag("dev").Value.String() == "true" {
 		mod = output.ModeDev
 	}
 	if cmd.Flag("indirect").Value.String() == "true" {
 		ind = true
+	}
+	if cmd.Flag("prompt").Value.String() == "true" {
+		pmt = true
 	}
 	if cmd.Flag("select").Value.String() == "true" {
 		scl = true
@@ -53,25 +54,17 @@ func update(cmd *cobra.Command) {
 		vrb = true
 	}
 
+	fmt.Println("Analyzing dependencies...")
 	if out := checkPrerequisites(); out.HasError() {
 		fmt.Println(out.ToString(mod))
 		return
 	}
 
-	lgr, lgrOut := logger.Init(mod)
-	if lgrOut.HasError() {
-		fmt.Println(lgrOut.ToString(mod))
+	upd, initOut := service.InitUpdater(mod)
+	if initOut.HasError() {
+		fmt.Println(initOut.ToString(mod))
 		os.Exit(1)
 	}
-
-	exc, out := executor.Init(lgr)
-	if out.HasError() {
-		fmt.Println(out.ToString(mod))
-		os.Exit(1)
-	}
-
-	hnd := module.InitHandler(exc)
-	upd := updater.Init(exc, hnd)
-	out = upd.UpdateModules(ind, scl, tst, vrb)
+	out := upd.UpdateModules(ind, pmt, scl, tst, vrb)
 	fmt.Println(out.ToString(mod))
 }

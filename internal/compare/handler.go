@@ -49,6 +49,15 @@ func (hnd Handler) AnalyzeUpdateDifferences(md module.Module) (module.Difference
 	return dffs, out
 }
 
+//InitializeClassifiers lazy loading classifiers only when needed
+func (hnd Handler) InitializeClassifiers() output.Output {
+	out := output.Create(pkg + ".InitializeClassifiers")
+	if licOut := hnd.licHnd.InitializeClassifier(); out.HasError() {
+		return licOut
+	}
+	return out
+}
+
 func (hnd Handler) addLicenseDifferences(md, mdUp module.Module, dffs *module.Differences) output.Output {
 	out := output.Create(pkg + ".addLicenseDifferences")
 
