@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"sync"
 
-	"github.com/dpcat237/go-dsu/internal/output"
 	"github.com/schollz/progressbar/v3"
 
 	"github.com/dpcat237/go-dsu/internal/download"
@@ -12,6 +11,7 @@ import (
 	"github.com/dpcat237/go-dsu/internal/license"
 	"github.com/dpcat237/go-dsu/internal/logger"
 	"github.com/dpcat237/go-dsu/internal/module"
+	"github.com/dpcat237/go-dsu/internal/output"
 	"github.com/dpcat237/go-dsu/internal/vulnerability"
 )
 

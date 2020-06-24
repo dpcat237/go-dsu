@@ -18,7 +18,7 @@ const (
 	colorRedBg
 )
 
-var tableAnalyzeHeader = []string{"Direct Module", "Submodules", "Version", "License", "Vulnerabilities"}
+var tableAnalyzeHeader = []string{"Direct Module", "Submodule", "Version", "License", "Vulnerabilities"}
 var tablePreviewHeader = []string{"Direct Module", "Version", "New Version", "Changes"}
 
 type tableColor uint16
