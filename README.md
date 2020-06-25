@@ -1,4 +1,10 @@
-## Overview
+# Go-DSU
+
+[![MIT license](https://img.shields.io/badge/License-MIT-blue.svg)](https://lbesson.mit-license.org/)
+[![Release](https://img.shields.io/github/v/release/dpcat237/go-dsu.svg)](https://github.com/dpcat237/go-dsu/releases/latest)
+[![Go Report Card](https://goreportcard.com/badge/github.com/dpcat237/go-dsu)](https://goreportcard.com/report/github.com/dpcat237/go-dsu)
+[![Go test](https://github.com/dpcat237/go-dsu/workflows/Go%20test/badge.svg)](https://github.com/dpcat237/go-dsu/workflows/Go%20test/badge.svg)
+[![codecov](https://codecov.io/gh/dpcat237/go-dsu/branch/master/graph/badge.svg)](https://codecov.io/gh/dpcat237/go-dsu)
 
 Go DSU - provides tools to update Go dependencies with more control than default Go tools. It isn't stable yet. Use it with caution, and any feedback would be very appreciated.  
 Go DSU works on base of Go modules and Git. Git uses public SSH key for access to private repositories.  
@@ -12,7 +18,8 @@ Go DSU works on base of Go modules and Git. Git uses public SSH key for access t
 - [x] Check vulnerabilities from OSS Index
 - [x] Adapt download with Git for not a known dependency
 - [x] Current command (analyze) - list all current licenses / vulnerabilities of dependencies
-- [ ] Implement more tests and improve documentation
+- [ ] Add more tests
+- [ ] Improve documentation
 
 ## Installation
 
