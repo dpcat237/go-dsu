@@ -7,17 +7,14 @@ import (
 )
 
 var (
-	// provided by https://goreleaser.com/
-	commit  = "none"
-	date    = "unknown"
-	version = "dev"
+	version = "0.7.0"
 
 	versionCmd = &cobra.Command{
 		Use:   "version",
 		Short: "Version",
 		Long:  `Version details`,
 		Run: func(cmd *cobra.Command, args []string) {
-			fmt.Printf("go-dsu %s built from commit %s on %s\n", version, commit, date)
+			fmt.Printf("go-dsu %s\n", version)
 		},
 	}
 )
