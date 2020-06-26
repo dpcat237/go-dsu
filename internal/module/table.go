@@ -208,7 +208,7 @@ func (md Module) differenceToString(dff Difference) string {
 	return ln
 }
 
-func (md Module) levelToColor(lvl diffLevel) tableColor {
+func (md Module) levelToColor(lvl DiffLevel) tableColor {
 	cl := colorWhite
 	switch lvl {
 	case DiffWeightLow:

@@ -6,7 +6,7 @@ import (
 
 const (
 	//DiffWeightLow difference with low severity
-	DiffWeightLow = diffLevel(iota)
+	DiffWeightLow = DiffLevel(iota)
 	//DiffWeightMedium difference with medium severity
 	DiffWeightMedium
 	//DiffWeightHigh difference with high severity
@@ -17,7 +17,7 @@ const (
 
 const (
 	//DiffTypeModuleFetchError error during module fetch
-	DiffTypeModuleFetchError = diffType(iota)
+	DiffTypeModuleFetchError = DiffType(iota)
 	//DiffTypeLicenseNotFound license not found
 	DiffTypeLicenseNotFound
 	//DiffTypeLicenseAdded license added
@@ -38,15 +38,15 @@ const (
 	DiffTypeNewVulnerability
 )
 
-type diffLevel uint16
-type diffType uint16
+type DiffLevel uint16
+type DiffType uint16
 
 // Difference contains differences between module versions
 type Difference struct {
-	Level         diffLevel
+	Level         DiffLevel
 	Module        Module
 	ModuleUpdate  Module
-	Type          diffType
+	Type          DiffType
 	Vulnerability vulnerability.Vulnerability
 }
 
@@ -54,7 +54,7 @@ type Difference struct {
 type Differences []Difference
 
 // AddModule adds difference of module
-func (dffs *Differences) AddModule(md Module, dfLv diffLevel, dfTp diffType) {
+func (dffs *Differences) AddModule(md Module, dfLv DiffLevel, dfTp DiffType) {
 	dif := Difference{
 		Module: md,
 		Level:  dfLv,
@@ -64,7 +64,7 @@ func (dffs *Differences) AddModule(md Module, dfLv diffLevel, dfTp diffType) {
 }
 
 // AddModules adds difference details with module and available update
-func (dffs *Differences) AddModules(md, mdUp Module, dfLv diffLevel, dfTp diffType) {
+func (dffs *Differences) AddModules(md, mdUp Module, dfLv DiffLevel, dfTp DiffType) {
 	df := Difference{
 		Module:       md,
 		ModuleUpdate: mdUp,
@@ -85,8 +85,8 @@ func (dffs *Differences) AddVulnerability(md Module, vln vulnerability.Vulnerabi
 	*dffs = append(*dffs, dif)
 }
 
-func (dffs Differences) highestLevel() diffLevel {
-	var lvl diffLevel
+func (dffs Differences) highestLevel() DiffLevel {
+	var lvl DiffLevel
 	for _, dff := range dffs {
 		if dff.Level > lvl {
 			lvl = dff.Level
@@ -95,7 +95,7 @@ func (dffs Differences) highestLevel() diffLevel {
 	return lvl
 }
 
-func (dffs Differences) vulnerabilityLevel(vln vulnerability.Vulnerability) diffLevel {
+func (dffs Differences) vulnerabilityLevel(vln vulnerability.Vulnerability) DiffLevel {
 	switch vln.Severity() {
 	case vulnerability.SeverityLow:
 		return DiffWeightLow
