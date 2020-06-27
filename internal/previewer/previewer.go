@@ -41,14 +41,10 @@ func (hnd Preview) Preview(pth string) output.Output {
 	bar := progressbar.Default(100)
 
 	hnd.dwnHnd.CleanTemporaryData()
-	if err := bar.Add(5); err != nil {
-		return out.WithError(err)
-	}
+	hnd.addProgress(bar, 5)
 
-	if pth != "" {
-		if pthOut := hnd.updateProjectPath(pth); pthOut.HasError() {
-			return pthOut
-		}
+	if pthOut := hnd.updateProjectPath(pth); pthOut.HasError() {
+		return pthOut
 	}
 
 	mds, mdsOut := hnd.mdHnd.ListAvailable(true, true)
@@ -59,16 +55,19 @@ func (hnd Preview) Preview(pth string) output.Output {
 	if len(mds) == 0 {
 		return out.WithResponse("All dependencies up to date")
 	}
-
-	if err := bar.Add(5); err != nil {
-		return out.WithError(err)
-	}
+	hnd.addProgress(bar, 5)
 
 	if clsOut := hnd.cmpHnd.InitializeClassifiers(); out.HasError() {
 		return clsOut
 	}
 
 	return hnd.processPreview(mds, bar)
+}
+
+func (hnd Preview) addProgress(bar *progressbar.ProgressBar, num int) {
+	if err := bar.Add(num); err != nil {
+		hnd.lgr.Debug(err.Error())
+	}
 }
 
 func (hnd Preview) analyzeModuleGoroutine(md *module.Module, wg *sync.WaitGroup, bar *progressbar.ProgressBar, each int) {
@@ -81,9 +80,7 @@ func (hnd Preview) analyzeModuleGoroutine(md *module.Module, wg *sync.WaitGroup,
 		md.UpdateDifferences = dfs
 	}
 
-	if err := bar.Add(each); err != nil {
-		hnd.lgr.Debug(err.Error())
-	}
+	hnd.addProgress(bar, each)
 	wg.Done()
 }
 
@@ -100,15 +97,16 @@ func (hnd Preview) processPreview(mds module.Modules, bar *progressbar.ProgressB
 	}
 
 	wg.Wait()
-	if err := bar.Add(90 - each*tt); err != nil {
-		return out.WithError(err)
-	}
+	hnd.addProgress(bar, 90-each*tt)
 
 	return out.WithResponse(mds.ToPreviewTable())
 }
 
 func (hnd Preview) updateProjectPath(mdPth string) output.Output {
 	out := output.Create(pkg + ".updateProjectPath")
+	if mdPth == "" {
+		return out
+	}
 
 	dir, dirOut := hnd.dwnHnd.DownloadModule(mdPth)
 	if dirOut.HasError() {

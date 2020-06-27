@@ -45,14 +45,10 @@ func (hnd Analyze) AnalyzeDependencies(pth string) output.Output {
 	bar := progressbar.Default(100)
 
 	hnd.dwnHnd.CleanTemporaryData()
-	if err := bar.Add(5); err != nil {
-		return out.WithError(err)
-	}
+	hnd.addProgress(bar, 5)
 
-	if pth != "" {
-		if pthOut := hnd.updateProjectPath(pth); pthOut.HasError() {
-			return pthOut
-		}
+	if pthOut := hnd.updateProjectPath(pth); pthOut.HasError() {
+		return pthOut
 	}
 
 	mds, mdsOut := hnd.mdHnd.ListAvailable(true, false)
@@ -63,16 +59,19 @@ func (hnd Analyze) AnalyzeDependencies(pth string) output.Output {
 	if len(mds) == 0 {
 		return out.WithResponse("All dependencies up to date")
 	}
-
-	if err := bar.Add(5); err != nil {
-		return out.WithError(err)
-	}
+	hnd.addProgress(bar, 5)
 
 	if licOut := hnd.licHnd.InitializeClassifier(); out.HasError() {
 		return licOut
 	}
 
 	return hnd.processAnalyzeDependencies(mds, bar)
+}
+
+func (hnd Analyze) addProgress(bar *progressbar.ProgressBar, num int) {
+	if err := bar.Add(num); err != nil {
+		hnd.lgr.Debug(err.Error())
+	}
 }
 
 func (hnd Analyze) analyzeModule(md *module.Module) output.Output {
@@ -110,10 +109,7 @@ func (hnd Analyze) analyzeModuleGoroutine(md *module.Module, wg *sync.WaitGroup,
 	if out := hnd.analyzeModule(md); out.HasError() {
 		hnd.lgr.Debug(out.String())
 	}
-
-	if err := bar.Add(each); err != nil {
-		hnd.lgr.Debug(err.Error())
-	}
+	hnd.addProgress(bar, each)
 	wg.Done()
 }
 
@@ -148,15 +144,16 @@ func (hnd Analyze) processAnalyzeDependencies(mds module.Modules, bar *progressb
 	}
 
 	wg.Wait()
-	if err := bar.Add(90 - each*tt); err != nil {
-		return out.WithError(err)
-	}
+	hnd.addProgress(bar, 90-each*tt)
 
 	return out.WithResponse(mds.ToAnalyzeTable())
 }
 
 func (hnd Analyze) updateProjectPath(mdPth string) output.Output {
 	out := output.Create(pkg + ".updateProjectPath")
+	if mdPth == "" {
+		return out
+	}
 
 	dir, dirOut := hnd.dwnHnd.DownloadModule(mdPth)
 	if dirOut.HasError() {
