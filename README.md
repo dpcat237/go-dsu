@@ -5,6 +5,7 @@
 [![Go Report Card](https://goreportcard.com/badge/github.com/dpcat237/go-dsu)](https://goreportcard.com/report/github.com/dpcat237/go-dsu)
 [![Go test](https://github.com/dpcat237/go-dsu/workflows/Go%20test/badge.svg)](https://github.com/dpcat237/go-dsu/workflows/Go%20test/badge.svg)
 [![codecov](https://codecov.io/gh/dpcat237/go-dsu/branch/master/graph/badge.svg)](https://codecov.io/gh/dpcat237/go-dsu)
+[![codebeat badge](https://codebeat.co/badges/3253db71-5cd4-4c29-9194-503b186494de)](https://codebeat.co/projects/github-com-dpcat237-go-dsu-master)
 
 Go DSU - provides tools to update Go dependencies with more control than default Go tools. It isn't stable yet. Use it with caution, and any feedback would be very appreciated.  
 Go DSU works on base of Go modules and Git. Git uses public SSH key for access to private repositories.  
