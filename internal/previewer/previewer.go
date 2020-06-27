@@ -67,6 +67,28 @@ func (hnd Preview) Preview(pth string) output.Output {
 	if clsOut := hnd.cmpHnd.InitializeClassifiers(); out.HasError() {
 		return clsOut
 	}
+
+	return hnd.processPreview(mds, bar)
+}
+
+func (hnd Preview) analyzeModuleGoroutine(md *module.Module, wg *sync.WaitGroup, bar *progressbar.ProgressBar, each int) {
+	dfs, dfsOut := hnd.cmpHnd.AnalyzeUpdateDifferences(*md)
+	if dfsOut.HasError() {
+		hnd.lgr.Debug(dfsOut.String())
+	}
+
+	if len(dfs) > 0 {
+		md.UpdateDifferences = dfs
+	}
+
+	if err := bar.Add(each); err != nil {
+		hnd.lgr.Debug(err.Error())
+	}
+	wg.Done()
+}
+
+func (hnd Preview) processPreview(mds module.Modules, bar *progressbar.ProgressBar) output.Output {
+	out := output.Create(pkg + ".processPreview")
 	defer hnd.dwnHnd.CleanTemporaryData()
 
 	var wg sync.WaitGroup
@@ -74,21 +96,7 @@ func (hnd Preview) Preview(pth string) output.Output {
 	each := 90 / tt
 	for k := range mds {
 		wg.Add(1)
-		go func(md *module.Module, wg *sync.WaitGroup, bar *progressbar.ProgressBar) {
-			dfs, dfsOut := hnd.cmpHnd.AnalyzeUpdateDifferences(*md)
-			if dfsOut.HasError() {
-				hnd.lgr.Debug(dfsOut.String())
-			}
-
-			if len(dfs) > 0 {
-				md.UpdateDifferences = dfs
-			}
-
-			if err := bar.Add(each); err != nil {
-				hnd.lgr.Debug(err.Error())
-			}
-			wg.Done()
-		}(&mds[k], &wg, bar)
+		go hnd.analyzeModuleGoroutine(&mds[k], &wg, bar, each)
 	}
 
 	wg.Wait()

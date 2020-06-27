@@ -3,17 +3,12 @@ package module
 import (
 	"fmt"
 	"strings"
-	"time"
 
 	"github.com/dpcat237/go-dsu/internal/license"
 	"github.com/dpcat237/go-dsu/internal/vulnerability"
 )
 
-const (
-	pkg = "module"
-
-	surveyPageSize = 25
-)
+const pkg = "module"
 
 //Details contains additional information about module
 type Details struct {
@@ -26,18 +21,17 @@ type Details struct {
 
 // Module holds information about a specific module
 type Module struct {
-	Main      bool       `json:",omitempty"` // is this the main module?
-	Indirect  bool       `json:",omitempty"` // module is only indirectly needed by main module
-	Dir       string     `json:",omitempty"` // directory holding local copy of files, if any
-	GoMod     string     `json:",omitempty"` // path to go.mod file describing module, if any
-	GoVersion string     `json:",omitempty"` // go version used in module
-	Path      string     `json:",omitempty"` // module path
-	Version   string     `json:",omitempty"` // module version
-	Versions  []string   `json:",omitempty"` // available module versions
-	Error     *Error     `json:",omitempty"` // error loading module
-	Replace   *Module    `json:",omitempty"` // replaced by this module
-	Time      *time.Time `json:",omitempty"` // time version was created
-	Update    *Module    `json:",omitempty"` // available update
+	Main      bool     `json:",omitempty"` // is this the main module?
+	Indirect  bool     `json:",omitempty"` // module is only indirectly needed by main module
+	Dir       string   `json:",omitempty"` // directory holding local copy of files, if any
+	GoMod     string   `json:",omitempty"` // path to go.mod file describing module, if any
+	GoVersion string   `json:",omitempty"` // go version used in module
+	Path      string   `json:",omitempty"` // module path
+	Version   string   `json:",omitempty"` // module version
+	Versions  []string `json:",omitempty"` // available module versions
+	Error     *Error   `json:",omitempty"` // error loading module
+	Replace   *Module  `json:",omitempty"` // replaced by this module
+	Update    *Module  `json:",omitempty"` // available update
 	Details
 }
 

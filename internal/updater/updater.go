@@ -41,7 +41,7 @@ func Init(cmpHnd *compare.Handler, dwnHnd *download.Handler, exc *executor.Execu
 }
 
 // UpdateModules clean and update dependencies
-func (upd Updater) UpdateModules(all, pmt, sct, tst, vrb bool) output.Output {
+func (upd Updater) UpdateModules(opt UpdateOptions) output.Output {
 	out := output.Create(pkg + ".UpdateModules")
 
 	upd.dwnHnd.CleanTemporaryData()
@@ -53,17 +53,17 @@ func (upd Updater) UpdateModules(all, pmt, sct, tst, vrb bool) output.Output {
 		return out.WithResponse("All dependencies up to date")
 	}
 
-	if all {
+	if opt.IsIndirect {
 		return upd.updateAll()
 	}
 
-	if sct {
+	if opt.IsSelect {
 		if err := mds.SelectCLI(); err != nil {
 			return out.WithErrorString("Error rendering modules selector")
 		}
 	}
 
-	if tst {
+	if opt.IsTests {
 		if tstOut := upd.runLocalTests(); tstOut.HasError() {
 			return out.WithErrorString("Updater aborted because project's tests fail")
 		}
@@ -74,7 +74,7 @@ func (upd Updater) UpdateModules(all, pmt, sct, tst, vrb bool) output.Output {
 	}
 	defer upd.dwnHnd.CleanTemporaryData()
 
-	return upd.updateDirectModules(mds, pmt, tst, vrb)
+	return upd.updateDirectModules(mds, opt)
 }
 
 func (upd Updater) runLocalTests() output.Output {
@@ -115,7 +115,7 @@ func (upd Updater) updateAll() output.Output {
 }
 
 // updateDirectModule updates direct module
-func (upd Updater) updateDirectModule(m module.Module, tst, vnd, vrb bool) output.Output {
+func (upd Updater) updateDirectModule(m module.Module, opt UpdateOptions, vnd bool) output.Output {
 	out := output.Create(pkg + ".updateModule")
 	excRsp, cmdOut := upd.exc.ExecProject(fmt.Sprintf("get %s", m.NewModule()))
 	if cmdOut.HasError() {
@@ -125,7 +125,7 @@ func (upd Updater) updateDirectModule(m module.Module, tst, vnd, vrb bool) outpu
 		return out.WithErrorString(excRsp.StdErrorString())
 	}
 
-	if tst {
+	if opt.IsTests {
 		if vnd {
 			if out := upd.updateVendor(); out.HasError() {
 				return out
@@ -138,20 +138,20 @@ func (upd Updater) updateDirectModule(m module.Module, tst, vnd, vrb bool) outpu
 		}
 	}
 
-	if vrb {
+	if opt.IsVerbose {
 		fmt.Printf("Updated %s  ->  %s\n", m, m.NewModule())
 	}
 	return out
 }
 
 // updateDirectModules updates direct modules
-func (upd Updater) updateDirectModules(mds module.Modules, pmt, tst, vrb bool) output.Output {
+func (upd Updater) updateDirectModules(mds module.Modules, opt UpdateOptions) output.Output {
 	out := output.Create(pkg + ".updateAll")
 	vnd := upd.exc.ExistsInProject(vendorFolder)
 
 	for _, md := range mds {
-		if !pmt {
-			if mOut := upd.updateDirectModule(md, tst, vnd, vrb); mOut.HasError() {
+		if !opt.IsPrompt {
+			if mOut := upd.updateDirectModule(md, opt, vnd); mOut.HasError() {
 				return mOut
 			}
 			continue
@@ -162,7 +162,7 @@ func (upd Updater) updateDirectModules(mds module.Modules, pmt, tst, vrb bool) o
 			upd.lgr.Debug(dfsOut.String())
 		}
 		if len(dfs) == 0 {
-			if mOut := upd.updateDirectModule(md, tst, vnd, vrb); mOut.HasError() {
+			if mOut := upd.updateDirectModule(md, opt, vnd); mOut.HasError() {
 				return mOut
 			}
 			continue
@@ -173,12 +173,12 @@ func (upd Updater) updateDirectModules(mds module.Modules, pmt, tst, vrb bool) o
 		if !upd.exc.PromptConfirmation("Update this module? (y/n):") {
 			continue
 		}
-		if mOut := upd.updateDirectModule(md, tst, vnd, vrb); mOut.HasError() {
+		if mOut := upd.updateDirectModule(md, opt, vnd); mOut.HasError() {
 			return mOut
 		}
 	}
 
-	if vnd && !tst {
+	if vnd && !opt.IsTests {
 		if out := upd.updateVendor(); out.HasError() {
 			return out
 		}

@@ -8,6 +8,7 @@ import (
 
 	"github.com/dpcat237/go-dsu/internal/output"
 	"github.com/dpcat237/go-dsu/internal/service"
+	"github.com/dpcat237/go-dsu/internal/updater"
 )
 
 var (
@@ -27,31 +28,22 @@ func init() {
 	updateCmd.Flags().BoolP("indirect", "i", false, "Updater all direct and indirect modules")
 	updateCmd.Flags().BoolP("prompt", "p", false, "Confirm in prompt updates with changes")
 	updateCmd.Flags().BoolP("select", "s", false, "Select direct modules to update")
-	updateCmd.Flags().BoolP("test", "t", false, "Run local tests after updating each module and rollback in case of errors")
+	updateCmd.Flags().BoolP("tests", "t", false, "Run local tests after updating each module and rollback in case of errors")
 	updateCmd.Flags().BoolP("verbose", "v", false, "Print output")
 }
 
 func update(cmd *cobra.Command) {
 	mod := output.ModeProd
-	var ind, pmt, scl, tst, vrb bool
-
-	if cmd.Flag("dev").Value.String() == "true" {
+	if cmd.Flag("dev").Changed {
 		mod = output.ModeDev
 	}
-	if cmd.Flag("indirect").Value.String() == "true" {
-		ind = true
-	}
-	if cmd.Flag("prompt").Value.String() == "true" {
-		pmt = true
-	}
-	if cmd.Flag("select").Value.String() == "true" {
-		scl = true
-	}
-	if cmd.Flag("test").Value.String() == "true" {
-		tst = true
-	}
-	if cmd.Flag("verbose").Value.String() == "true" {
-		vrb = true
+
+	updOpt := updater.UpdateOptions{
+		IsIndirect: cmd.Flag("indirect").Changed,
+		IsPrompt:   cmd.Flag("prompt").Changed,
+		IsSelect:   cmd.Flag("select").Changed,
+		IsTests:    cmd.Flag("tests").Changed,
+		IsVerbose:  cmd.Flag("verbose").Changed,
 	}
 
 	fmt.Println("Analyzing dependencies...")
@@ -65,6 +57,6 @@ func update(cmd *cobra.Command) {
 		fmt.Println(initOut.ToString(mod))
 		os.Exit(1)
 	}
-	out := upd.UpdateModules(ind, pmt, scl, tst, vrb)
+	out := upd.UpdateModules(updOpt)
 	fmt.Println(out.ToString(mod))
 }

@@ -87,6 +87,12 @@ func (hnd Handler) addLicenseDifferences(md, mdUp module.Module, dffs *module.Di
 		return out
 	}
 
+	return hnd.addLicenseTypeDifferences(md, mdUp, dffs)
+}
+
+func (hnd Handler) addLicenseTypeDifferences(md, mdUp module.Module, dffs *module.Differences) output.Output {
+	out := output.Create(pkg + ".addLicenseTypeDifferences")
+
 	// Identify license name and type
 	hnd.licHnd.IdentifyType(&md.License)
 	hnd.licHnd.IdentifyType(&mdUp.License)

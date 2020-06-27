@@ -71,22 +71,8 @@ func (hnd Analyze) AnalyzeDependencies(pth string) output.Output {
 	if licOut := hnd.licHnd.InitializeClassifier(); out.HasError() {
 		return licOut
 	}
-	defer hnd.dwnHnd.CleanTemporaryData()
 
-	var wg sync.WaitGroup
-	tt := len(mds)
-	each := 90 / tt
-	for k := range mds {
-		wg.Add(1)
-		go hnd.analyzeModuleGoroutine(&mds[k], &wg, bar, each)
-	}
-
-	wg.Wait()
-	if err := bar.Add(90 - each*tt); err != nil {
-		return out.WithError(err)
-	}
-
-	return out.WithResponse(mds.ToAnalyzeTable())
+	return hnd.processAnalyzeDependencies(mds, bar)
 }
 
 func (hnd Analyze) analyzeModule(md *module.Module) output.Output {
@@ -147,6 +133,26 @@ func (hnd Analyze) analyzeModuleDependencies(md module.Module) ([]module.Module,
 	}
 
 	return mds, out
+}
+
+func (hnd Analyze) processAnalyzeDependencies(mds module.Modules, bar *progressbar.ProgressBar) output.Output {
+	out := output.Create(pkg + ".processAnalyzeDependencies")
+	defer hnd.dwnHnd.CleanTemporaryData()
+
+	var wg sync.WaitGroup
+	tt := len(mds)
+	each := 90 / tt
+	for k := range mds {
+		wg.Add(1)
+		go hnd.analyzeModuleGoroutine(&mds[k], &wg, bar, each)
+	}
+
+	wg.Wait()
+	if err := bar.Add(90 - each*tt); err != nil {
+		return out.WithError(err)
+	}
+
+	return out.WithResponse(mds.ToAnalyzeTable())
 }
 
 func (hnd Analyze) updateProjectPath(mdPth string) output.Output {

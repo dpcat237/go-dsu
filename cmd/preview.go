@@ -29,7 +29,7 @@ func init() {
 
 func preview(cmd *cobra.Command) {
 	mod := output.ModeProd
-	if cmd.Flag("dev").Value.String() == "true" {
+	if cmd.Flag("dev").Changed {
 		mod = output.ModeDev
 	}
 

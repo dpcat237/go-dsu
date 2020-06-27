@@ -6,6 +6,8 @@ import (
 	"github.com/AlecAivazis/survey/v2"
 )
 
+const surveyPageSize = 25
+
 // SelectCLI allows interactively select modules to update
 func (mds *Modules) SelectCLI() error {
 	prompt := &survey.MultiSelect{
