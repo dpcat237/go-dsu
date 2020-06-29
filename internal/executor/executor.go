@@ -10,19 +10,17 @@ import (
 	"github.com/dpcat237/go-dsu/internal/output"
 )
 
-const (
-	pkg = "executor"
-)
+const pkg = "executor"
 
 //Executor executes CLI commands
 type Executor struct {
 	goPath      string
-	lgr         *logger.Logger
+	lgr         logger.Logger
 	projectPath string
 }
 
 // Init initializes CLI commands executor
-func Init(lgr *logger.Logger) (*Executor, output.Output) {
+func Init(lgr logger.Logger) (*Executor, output.Output) {
 	out := output.Create(pkg + ".init")
 	var exc Executor
 

@@ -18,14 +18,14 @@ const pkg = "previewer"
 //Preview handles changes preview processes
 type Preview struct {
 	cmpHnd *compare.Handler
-	dwnHnd *download.Handler
+	dwnHnd download.Handler
 	exc    *executor.Executor
-	lgr    *logger.Logger
-	mdHnd  *module.Handler
+	lgr    logger.Logger
+	mdHnd  module.Handler
 }
 
 //Init initializes Preview
-func Init(cmpHnd *compare.Handler, dwnHnd *download.Handler, exc *executor.Executor, lgr *logger.Logger, mdHnd *module.Handler) *Preview {
+func Init(cmpHnd *compare.Handler, dwnHnd download.Handler, exc *executor.Executor, lgr logger.Logger, mdHnd module.Handler) *Preview {
 	return &Preview{
 		cmpHnd: cmpHnd,
 		dwnHnd: dwnHnd,

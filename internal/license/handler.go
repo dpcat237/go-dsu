@@ -18,20 +18,26 @@ import (
 const confidenceThreshold = float64(0.9)
 
 //Handler handles functions related to license identification
-type Handler struct {
+type Handler interface {
+	FindLicense(dir string) License
+	IdentifyType(lic *License)
+	InitializeClassifier() output.Output
+}
+
+type handler struct {
 	cls *licenseclassifier.License
-	lgr *logger.Logger
+	lgr logger.Logger
 }
 
 // InitHandler initializes handler of licenses
-func InitHandler(lgr *logger.Logger) *Handler {
-	return &Handler{
+func InitHandler(lgr logger.Logger) *handler {
+	return &handler{
 		lgr: lgr,
 	}
 }
 
 // FindLicense looks for a license in given directory
-func (hnd Handler) FindLicense(dir string) License {
+func (hnd handler) FindLicense(dir string) License {
 	var lic License
 
 	pth, pthOut := hnd.licensePath(dir)
@@ -52,7 +58,7 @@ func (hnd Handler) FindLicense(dir string) License {
 }
 
 // IdentifyType identifies license name and type
-func (hnd Handler) IdentifyType(lic *License) {
+func (hnd handler) IdentifyType(lic *License) {
 	if lic.Path == "" {
 		hnd.lgr.Debug("Empty path during license identification")
 		return
@@ -73,7 +79,7 @@ func (hnd Handler) IdentifyType(lic *License) {
 }
 
 //InitializeClassifier Initialize licenses classifier
-func (hnd *Handler) InitializeClassifier() output.Output {
+func (hnd *handler) InitializeClassifier() output.Output {
 	out := output.Create(pkg + ".InitializeClassifier")
 
 	cls, err := licenseclassifier.New(confidenceThreshold)
@@ -84,7 +90,7 @@ func (hnd *Handler) InitializeClassifier() output.Output {
 	return out
 }
 
-func (hnd Handler) fileHash(flPath string) (string, output.Output) {
+func (hnd handler) fileHash(flPath string) (string, output.Output) {
 	out := output.Create(pkg + ".fileHash")
 
 	hash := md5.New()
@@ -99,7 +105,7 @@ func (hnd Handler) fileHash(flPath string) (string, output.Output) {
 	return hex.EncodeToString(hash.Sum(nil)[:16]), out
 }
 
-func (hnd Handler) isLicense(flName string) bool {
+func (hnd handler) isLicense(flName string) bool {
 	flName = strings.ToLower(flName)
 	if flName == licensesBase[0] {
 		return true
@@ -114,7 +120,7 @@ func (hnd Handler) isLicense(flName string) bool {
 	return false
 }
 
-func (hnd Handler) licensePath(dir string) (string, output.Output) {
+func (hnd handler) licensePath(dir string) (string, output.Output) {
 	out := output.Create(pkg + ".licenseHash")
 
 	files, err := ioutil.ReadDir(dir)

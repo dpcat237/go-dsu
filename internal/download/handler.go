@@ -26,28 +26,34 @@ const (
 	pkg = "download"
 )
 
+//handler handles functions related to download modules
+type Handler interface {
+	CleanTemporaryData()
+	DownloadModule(mdPth string) (string, output.Output)
+	FolderAccessible(pth string) bool
+}
+
 type details struct {
 	tempDir string
 	vcs     string
 	version string
 }
 
-//Handler handles functions related to download modules
-type Handler struct {
+type handler struct {
 	exc *executor.Executor
-	lgr *logger.Logger
+	lgr logger.Logger
 }
 
 //InitHandler initializes downloads handler
-func InitHandler(exc *executor.Executor, lgr *logger.Logger) *Handler {
-	return &Handler{
+func InitHandler(exc *executor.Executor, lgr logger.Logger) *handler {
+	return &handler{
 		exc: exc,
 		lgr: lgr,
 	}
 }
 
 //CleanTemporaryData removes temporary folder
-func (hnd Handler) CleanTemporaryData() {
+func (hnd handler) CleanTemporaryData() {
 	bsPth := fmt.Sprintf("%s/%s", os.TempDir(), baseTmpFolder)
 	if _, err := os.Stat(bsPth); err != nil {
 		return
@@ -59,7 +65,7 @@ func (hnd Handler) CleanTemporaryData() {
 }
 
 //DownloadModule download module and returns local directory to module
-func (hnd Handler) DownloadModule(mdPth string) (string, output.Output) {
+func (hnd handler) DownloadModule(mdPth string) (string, output.Output) {
 	out := output.Create(pkg + ".DownloadModule")
 
 	if mdPth == "" {
@@ -77,7 +83,7 @@ func (hnd Handler) DownloadModule(mdPth string) (string, output.Output) {
 }
 
 // FolderAccessible verifies that provided folder is accessible and allow commands execution
-func (hnd Handler) FolderAccessible(pth string) bool {
+func (hnd handler) FolderAccessible(pth string) bool {
 	if pth == "" {
 		return false
 	}
@@ -92,14 +98,14 @@ func (hnd Handler) FolderAccessible(pth string) bool {
 	return true
 }
 
-func (hnd Handler) cleanVersion(vr string) string {
+func (hnd handler) cleanVersion(vr string) string {
 	if strings.Contains(vr, "+") {
 		return strings.ReplaceAll(vr, "+", "_")
 	}
 	return vr
 }
 
-func (hnd Handler) gitDownload(mdPth string) (string, output.Output) {
+func (hnd handler) gitDownload(mdPth string) (string, output.Output) {
 	out := output.Create(pkg + ".gitDownload")
 
 	dt, err := hnd.transformModulePath(mdPth)
@@ -137,7 +143,7 @@ func (hnd Handler) gitDownload(mdPth string) (string, output.Output) {
 	return dt.tempDir, out
 }
 
-func (hnd Handler) modDownload(mdPth string) (string, output.Output) {
+func (hnd handler) modDownload(mdPth string) (string, output.Output) {
 	out := output.Create(fmt.Sprintf("%s.%s '%s'", pkg, "downloadModule", mdPth))
 
 	// Download
@@ -160,7 +166,7 @@ func (hnd Handler) modDownload(mdPth string) (string, output.Output) {
 	return mdDwn.Dir, out
 }
 
-func (hnd Handler) transformModulePath(mdPth string) (details, error) {
+func (hnd handler) transformModulePath(mdPth string) (details, error) {
 	var dt details
 	pth := mdPth
 	if strings.Contains(mdPth, "@") {

@@ -16,19 +16,24 @@ const (
 )
 
 //Handler handles functions related to modules
-type Handler struct {
+type Handler interface {
+	ListAvailable(direct, withUpdate bool) (Modules, output.Output)
+	ListSubModules(pth string) (Modules, output.Output)
+}
+
+type handler struct {
 	exc *executor.Executor
 }
 
 //InitHandler initializes Module handler
-func InitHandler(exc *executor.Executor) *Handler {
-	return &Handler{
+func InitHandler(exc *executor.Executor) *handler {
+	return &handler{
 		exc: exc,
 	}
 }
 
 // ListAvailable list modules with available updates
-func (hnd Handler) ListAvailable(direct, withUpdate bool) (Modules, output.Output) {
+func (hnd handler) ListAvailable(direct, withUpdate bool) (Modules, output.Output) {
 	var mds Modules
 	out := output.Create(pkg + ".ListAvailable")
 
@@ -47,7 +52,7 @@ func (hnd Handler) ListAvailable(direct, withUpdate bool) (Modules, output.Outpu
 }
 
 //ListSubModules return submodules (indirect modules)
-func (hnd Handler) ListSubModules(pth string) (Modules, output.Output) {
+func (hnd handler) ListSubModules(pth string) (Modules, output.Output) {
 	out := output.Create(pkg + ".listSubModules")
 	var mds Modules
 
@@ -65,7 +70,7 @@ func (hnd Handler) ListSubModules(pth string) (Modules, output.Output) {
 	return hnd.bytesToModules(excRsp.StdOutput, true, false)
 }
 
-func (hnd Handler) bytesToModules(rspBts []byte, direct, withUpdate bool) (Modules, output.Output) {
+func (hnd handler) bytesToModules(rspBts []byte, direct, withUpdate bool) (Modules, output.Output) {
 	var mds Modules
 	out := output.Create(pkg + ".bytesToModules")
 	dec := json.NewDecoder(bytes.NewReader(rspBts))

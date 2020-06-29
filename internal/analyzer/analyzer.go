@@ -19,16 +19,16 @@ const pkg = "analyzer"
 
 //Analyze analyzes current dependencies
 type Analyze struct {
-	dwnHnd *download.Handler
+	dwnHnd download.Handler
 	exc    *executor.Executor
-	lgr    *logger.Logger
-	licHnd *license.Handler
-	mdHnd  *module.Handler
-	vlnHnd *vulnerability.Handler
+	lgr    logger.Logger
+	licHnd license.Handler
+	mdHnd  module.Handler
+	vlnHnd vulnerability.Handler
 }
 
 //Init initializes Analyzer
-func Init(dwnHnd *download.Handler, exc *executor.Executor, lgr *logger.Logger, licHnd *license.Handler, mdHnd *module.Handler, vlnHnd *vulnerability.Handler) *Analyze {
+func Init(dwnHnd download.Handler, exc *executor.Executor, lgr logger.Logger, licHnd license.Handler, mdHnd module.Handler, vlnHnd vulnerability.Handler) *Analyze {
 	return &Analyze{
 		dwnHnd: dwnHnd,
 		exc:    exc,

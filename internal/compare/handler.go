@@ -13,17 +13,17 @@ import (
 
 const pkg = "compare"
 
-//Handler compare module and his update to find differences
+//handler compare module and his update to find differences
 type Handler struct {
-	dwnHnd *download.Handler
-	lgr    *logger.Logger
-	licHnd *license.Handler
-	mdHnd  *module.Handler
-	vlnHnd *vulnerability.Handler
+	dwnHnd download.Handler
+	lgr    logger.Logger
+	licHnd license.Handler
+	mdHnd  module.Handler
+	vlnHnd vulnerability.Handler
 }
 
-//Init initializes compare Handler
-func Init(dwnHnd *download.Handler, lgr *logger.Logger, licHnd *license.Handler, mdHnd *module.Handler, vlnHnd *vulnerability.Handler) *Handler {
+//Init initializes compare handler
+func Init(dwnHnd download.Handler, lgr logger.Logger, licHnd license.Handler, mdHnd module.Handler, vlnHnd vulnerability.Handler) *Handler {
 	return &Handler{
 		dwnHnd: dwnHnd,
 		lgr:    lgr,

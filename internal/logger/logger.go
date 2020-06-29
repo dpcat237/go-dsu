@@ -8,15 +8,26 @@ import (
 
 const pkg = "logger"
 
-// Logger wraps zap.Logger
-type Logger struct {
+// Logger wraps zap.logger
+type Logger interface {
+	Sugar() *zap.SugaredLogger
+	WithOptions(opts ...zap.Option) *zap.Logger
+	With(fields ...zap.Field) *zap.Logger
+	Debug(msg string, fields ...zap.Field)
+	Info(msg string, fields ...zap.Field)
+	Warn(msg string, fields ...zap.Field)
+	Error(msg string, fields ...zap.Field)
+	Fatal(msg string, fields ...zap.Field)
+}
+
+type logger struct {
 	*zap.Logger
 }
 
-// Init creates a new preconfigured zap.Logger
-func Init(mod output.Mode) (*Logger, output.Output) {
+// Init creates a new preconfigured zap.logger
+func Init(mod output.Mode) (*logger, output.Output) {
 	out := output.Create(pkg + ".Init")
-	var lgr Logger
+	var lgr logger
 	var zapLg *zap.Logger
 	var err error
 

@@ -23,14 +23,14 @@ const (
 //Updater manages execution of update processes
 type Updater struct {
 	cmpHnd *compare.Handler
-	dwnHnd *download.Handler
+	dwnHnd download.Handler
 	exc    *executor.Executor
-	lgr    *logger.Logger
-	mdHnd  *module.Handler
+	lgr    logger.Logger
+	mdHnd  module.Handler
 }
 
 // Init initializes updater handler
-func Init(cmpHnd *compare.Handler, dwnHnd *download.Handler, exc *executor.Executor, lgr *logger.Logger, mdHnd *module.Handler) *Updater {
+func Init(cmpHnd *compare.Handler, dwnHnd download.Handler, exc *executor.Executor, lgr logger.Logger, mdHnd module.Handler) *Updater {
 	return &Updater{
 		cmpHnd: cmpHnd,
 		dwnHnd: dwnHnd,
