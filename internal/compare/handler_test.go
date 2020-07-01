@@ -10,9 +10,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"go.uber.org/zap"
 
-	"github.com/dpcat237/go-dsu/internal/download"
 	"github.com/dpcat237/go-dsu/internal/license"
-	"github.com/dpcat237/go-dsu/internal/logger"
 	"github.com/dpcat237/go-dsu/internal/module"
 	"github.com/dpcat237/go-dsu/internal/output"
 	"github.com/dpcat237/go-dsu/internal/vulnerability"
@@ -47,10 +45,43 @@ func (m mockLicenseHandler) FindLicense(dir string) license.License {
 		hash = "owuem4353m4cewhf"
 	}
 
-	return license.License{Hash: hash}
+	return license.License{
+		Hash: hash,
+		Path: dir,
+	}
 }
 
 func (mockLicenseHandler) IdentifyType(lic *license.License) {
+	if len(lic.Path) < 2 {
+		return
+	}
+
+	if lic.Path[1] == 100 { // d - different
+		lic.Name = newHash()
+	} else if lic.Path[1] == 101 { // e - equal
+		lic.Name = "test-license-name"
+	}
+
+	if len(lic.Path) < 3 {
+		return
+	}
+
+	switch lic.Path[2] {
+	case 97: // a
+		lic.Type = license.Unknown
+	case 98: // b
+		lic.Type = license.Restricted
+	case 99: // c
+		lic.Type = license.Reciprocal
+	case 100: // d
+		lic.Type = license.Notice
+	case 101: // e
+		lic.Type = license.Permissive
+	case 102: // f
+		lic.Type = license.Unencumbered
+	case 103: // g
+		lic.Type = license.Forbidden
+	}
 }
 
 func (mockLicenseHandler) InitializeClassifier() output.Output {
@@ -108,13 +139,6 @@ func (mockVulnerabilityHandler) ModuleVulnerabilities(pth string) (vulnerability
 func TestHandler_addLicenseDifferences(t *testing.T) {
 	rand.Seed(time.Now().UnixNano())
 
-	type fields struct {
-		dwnHnd download.Handler
-		lgr    logger.Logger
-		licHnd license.Handler
-		mdHnd  module.Handler
-		vlnHnd vulnerability.Handler
-	}
 	type args struct {
 		md   module.Module
 		mdUp module.Module
@@ -229,6 +253,308 @@ func TestHandler_addLicenseDifferences(t *testing.T) {
 						GoMod: "testm4b",
 					},
 					Type: module.DiffTypeLicenseAdded,
+				},
+				isDff: true,
+			},
+		},
+	}
+
+	hnd := Handler{
+		dwnHnd: mockDownloadHandler{},
+		lgr:    mockLogger{},
+		licHnd: mockLicenseHandler{},
+		mdHnd:  mockModuleHandler{},
+		vlnHnd: mockVulnerabilityHandler{},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			var dffs module.Differences
+			out := hnd.addLicenseDifferences(tt.args.md, tt.args.mdUp, &dffs)
+
+			assert.Equal(t, tt.want.out.GetError(), out.GetError())
+			assert.Equal(t, tt.want.isDff, len(dffs) > 0)
+
+			if !tt.want.isDff {
+				return
+			}
+			dff := dffs[0]
+
+			assert.Equal(t, tt.want.dff.Level, dff.Level)
+			assert.Equal(t, tt.want.dff.Type, dff.Type)
+			assert.Equal(t, tt.want.dff.Module.GoMod, dff.Module.GoMod)
+			assert.Equal(t, tt.want.dff.Module.GoMod, dff.Module.GoMod)
+			assert.Equal(t, tt.want.dff.ModuleUpdate.GoMod, dff.ModuleUpdate.GoMod)
+		})
+	}
+}
+
+func TestHandler_addLicenseTypeDifferences(t *testing.T) {
+	rand.Seed(time.Now().UnixNano())
+
+	type args struct {
+		md   module.Module
+		mdUp module.Module
+		dffs *module.Differences
+	}
+	type want struct {
+		out   output.Output
+		dff   module.Difference
+		isDff bool
+	}
+	tests := []struct {
+		name string
+		args args
+		want want
+	}{
+		{
+			name: "Minor changes in license",
+			args: args{
+				md: module.Module{
+					Dir:   "de",
+					GoMod: "testm1a",
+				},
+				mdUp: module.Module{
+					Dir:   "de",
+					GoMod: "testm1b",
+				},
+				dffs: &module.Differences{},
+			},
+			want: want{
+				out: output.Output{},
+				dff: module.Difference{
+					Level: module.DiffWeightLow,
+					Module: module.Module{
+						GoMod: "testm1a",
+					},
+					ModuleUpdate: module.Module{
+						GoMod: "testm1b",
+					},
+					Type: module.DiffTypeLicenseMinorChanges,
+				},
+				isDff: true,
+			},
+		},
+		{
+			name: "License name changed",
+			args: args{
+				md: module.Module{
+					Dir:   "ddc",
+					GoMod: "testm2a",
+				},
+				mdUp: module.Module{
+					Dir:   "ddc",
+					GoMod: "testm2b",
+				},
+				dffs: &module.Differences{},
+			},
+			want: want{
+				out: output.Output{},
+				dff: module.Difference{
+					Level: module.DiffWeightMedium,
+					Module: module.Module{
+						GoMod: "testm2a",
+					},
+					ModuleUpdate: module.Module{
+						GoMod: "testm2b",
+					},
+					Type: module.DiffTypeLicenseNameChanged,
+				},
+				isDff: true,
+			},
+		},
+		{
+			name: "License changed to less strict 1",
+			args: args{
+				md: module.Module{
+					Dir:   "ddg",
+					GoMod: "testm2a",
+				},
+				mdUp: module.Module{
+					Dir:   "ddb",
+					GoMod: "testm2b",
+				},
+				dffs: &module.Differences{},
+			},
+			want: want{
+				out: output.Output{},
+				dff: module.Difference{
+					Level: module.DiffWeightLow,
+					Module: module.Module{
+						GoMod: "testm2a",
+					},
+					ModuleUpdate: module.Module{
+						GoMod: "testm2b",
+					},
+					Type: module.DiffTypeLicenseLessStrictChanged,
+				},
+				isDff: true,
+			},
+		},
+		{
+			name: "License changed to less strict 2",
+			args: args{
+				md: module.Module{
+					Dir:   "ddb",
+					GoMod: "testm3a",
+				},
+				mdUp: module.Module{
+					Dir:   "ddc",
+					GoMod: "testm3b",
+				},
+				dffs: &module.Differences{},
+			},
+			want: want{
+				out: output.Output{},
+				dff: module.Difference{
+					Level: module.DiffWeightLow,
+					Module: module.Module{
+						GoMod: "testm3a",
+					},
+					ModuleUpdate: module.Module{
+						GoMod: "testm3b",
+					},
+					Type: module.DiffTypeLicenseLessStrictChanged,
+				},
+				isDff: true,
+			},
+		},
+		{
+			name: "License changed to less strict 3",
+			args: args{
+				md: module.Module{
+					Dir:   "ddc",
+					GoMod: "testm4a",
+				},
+				mdUp: module.Module{
+					Dir:   "ddd",
+					GoMod: "testm4b",
+				},
+				dffs: &module.Differences{},
+			},
+			want: want{
+				out: output.Output{},
+				dff: module.Difference{
+					Level: module.DiffWeightLow,
+					Module: module.Module{
+						GoMod: "testm4a",
+					},
+					ModuleUpdate: module.Module{
+						GoMod: "testm4b",
+					},
+					Type: module.DiffTypeLicenseLessStrictChanged,
+				},
+				isDff: true,
+			},
+		},
+		{
+			name: "License changed to less strict 4",
+			args: args{
+				md: module.Module{
+					Dir:   "ddc",
+					GoMod: "testm5a",
+				},
+				mdUp: module.Module{
+					Dir:   "dde",
+					GoMod: "testm5b",
+				},
+				dffs: &module.Differences{},
+			},
+			want: want{
+				out: output.Output{},
+				dff: module.Difference{
+					Level: module.DiffWeightLow,
+					Module: module.Module{
+						GoMod: "testm5a",
+					},
+					ModuleUpdate: module.Module{
+						GoMod: "testm5b",
+					},
+					Type: module.DiffTypeLicenseLessStrictChanged,
+				},
+				isDff: true,
+			},
+		},
+		{
+			name: "License changed to less strict 5",
+			args: args{
+				md: module.Module{
+					Dir:   "ddb",
+					GoMod: "testm6a",
+				},
+				mdUp: module.Module{
+					Dir:   "ddf",
+					GoMod: "testm6b",
+				},
+				dffs: &module.Differences{},
+			},
+			want: want{
+				out: output.Output{},
+				dff: module.Difference{
+					Level: module.DiffWeightLow,
+					Module: module.Module{
+						GoMod: "testm6a",
+					},
+					ModuleUpdate: module.Module{
+						GoMod: "testm6b",
+					},
+					Type: module.DiffTypeLicenseLessStrictChanged,
+				},
+				isDff: true,
+			},
+		},
+		{
+			name: "License changed to more restrictive with critical restrictiveness",
+			args: args{
+				md: module.Module{
+					Dir:   "dde",
+					GoMod: "testm7a",
+				},
+				mdUp: module.Module{
+					Dir:   "ddb",
+					GoMod: "testm7b",
+				},
+				dffs: &module.Differences{},
+			},
+			want: want{
+				out: output.Output{},
+				dff: module.Difference{
+					Level: module.DiffWeightCritical,
+					Module: module.Module{
+						GoMod: "testm7a",
+					},
+					ModuleUpdate: module.Module{
+						GoMod: "testm7b",
+					},
+					Type: module.DiffTypeLicenseMoreStrictChanged,
+				},
+				isDff: true,
+			},
+		},
+		{
+			name: "License changed to more restrictive",
+			args: args{
+				md: module.Module{
+					Dir:   "ddd",
+					GoMod: "testm7a",
+				},
+				mdUp: module.Module{
+					Dir:   "ddc",
+					GoMod: "testm7b",
+				},
+				dffs: &module.Differences{},
+			},
+			want: want{
+				out: output.Output{},
+				dff: module.Difference{
+					Level: module.DiffWeightHigh,
+					Module: module.Module{
+						GoMod: "testm7a",
+					},
+					ModuleUpdate: module.Module{
+						GoMod: "testm7b",
+					},
+					Type: module.DiffTypeLicenseMoreStrictChanged,
 				},
 				isDff: true,
 			},
