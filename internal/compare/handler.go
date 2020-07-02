@@ -17,7 +17,6 @@ const pkg = "compare"
 type Handler struct {
 	dwnHnd download.Handler
 	lgr    logger.Logger
-	licCmp *licenseComparer
 	licHnd license.Handler
 	mdHnd  module.Handler
 	vlnHnd vulnerability.Handler
@@ -28,7 +27,6 @@ func Init(dwnHnd download.Handler, lgr logger.Logger, licHnd license.Handler, md
 	return &Handler{
 		dwnHnd: dwnHnd,
 		lgr:    lgr,
-		licCmp: initLicenseComparer(),
 		licHnd: licHnd,
 		mdHnd:  mdHnd,
 		vlnHnd: vlnHnd,
@@ -67,8 +65,8 @@ func (hnd Handler) addLicenseDifferences(md, mdUp module.Module, dffs *module.Di
 	md.License = hnd.licHnd.FindLicense(md.Dir)
 	mdUp.License = hnd.licHnd.FindLicense(mdUp.Dir)
 
-	cmpType := hnd.licCmp.minorChanges(hnd.licCmp.changedSameRestrictiveness(hnd.licCmp.lessRestrictive(hnd.licCmp.criticalRestrictiveness(hnd.licCmp.moreRestrictive()))))
-	cmp := hnd.licCmp.licenseNotFound(hnd.licCmp.sameLicense(hnd.licCmp.licenseRemoved(hnd.licCmp.licenseAdded(cmpType))))
+	cmpType := hnd.minorChanges(hnd.changedSameRestrictiveness(hnd.lessRestrictive(hnd.criticalRestrictiveness(hnd.moreRestrictive()))))
+	cmp := hnd.licenseNotFound(hnd.sameLicense(hnd.licenseRemoved(hnd.licenseAdded(cmpType))))
 	cmp.compareLicenses(md, mdUp, dffs.AddModules)
 	return out
 }

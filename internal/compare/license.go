@@ -6,13 +6,6 @@ type licenseChangeHandler interface {
 	compareLicenses(md module.Module, mdUp module.Module, addDff addDifference)
 }
 
-type licenseComparer struct {
-}
-
-func initLicenseComparer() *licenseComparer {
-	return &licenseComparer{}
-}
-
 type addDifference func(md, mdUp module.Module, dfLv module.DiffLevel, dfTp module.DiffType)
 type compareLicensesFunc func(md module.Module, mdUp module.Module, addDff addDifference)
 
@@ -21,7 +14,7 @@ func (f compareLicensesFunc) compareLicenses(md module.Module, mdUp module.Modul
 }
 
 // License name changed maintaining restrictiveness type
-func (hnd *licenseComparer) changedSameRestrictiveness(nextHnd licenseChangeHandler) licenseChangeHandler {
+func (hnd Handler) changedSameRestrictiveness(nextHnd licenseChangeHandler) licenseChangeHandler {
 	return compareLicensesFunc(func(md module.Module, mdUp module.Module, addDff addDifference) {
 		if md.License.Type == mdUp.License.Type && md.License.Name != mdUp.License.Name {
 			addDff(md, mdUp, module.DiffWeightMedium, module.DiffTypeLicenseNameChanged)
@@ -32,7 +25,7 @@ func (hnd *licenseComparer) changedSameRestrictiveness(nextHnd licenseChangeHand
 }
 
 // License changed to more restrictive with critical restrictiveness
-func (hnd *licenseComparer) criticalRestrictiveness(nextHnd licenseChangeHandler) licenseChangeHandler {
+func (hnd Handler) criticalRestrictiveness(nextHnd licenseChangeHandler) licenseChangeHandler {
 	return compareLicensesFunc(func(md module.Module, mdUp module.Module, addDff addDifference) {
 		if mdUp.License.IsCritical() {
 			addDff(md, mdUp, module.DiffWeightCritical, module.DiffTypeLicenseMoreStrictChanged)
@@ -43,7 +36,7 @@ func (hnd *licenseComparer) criticalRestrictiveness(nextHnd licenseChangeHandler
 }
 
 // License changed to less restrictive
-func (hnd *licenseComparer) lessRestrictive(nextHnd licenseChangeHandler) licenseChangeHandler {
+func (hnd Handler) lessRestrictive(nextHnd licenseChangeHandler) licenseChangeHandler {
 	return compareLicensesFunc(func(md module.Module, mdUp module.Module, addDff addDifference) {
 		if !md.License.IsMoreRestrictive(mdUp.License.Type) {
 			addDff(md, mdUp, module.DiffWeightLow, module.DiffTypeLicenseLessStrictChanged)
@@ -54,7 +47,7 @@ func (hnd *licenseComparer) lessRestrictive(nextHnd licenseChangeHandler) licens
 }
 
 // License added
-func (hnd *licenseComparer) licenseAdded(nextHnd licenseChangeHandler) licenseChangeHandler {
+func (hnd Handler) licenseAdded(nextHnd licenseChangeHandler) licenseChangeHandler {
 	return compareLicensesFunc(func(md module.Module, mdUp module.Module, addDff addDifference) {
 		if !md.License.Found() && mdUp.License.Found() {
 			addDff(md, mdUp, module.DiffWeightHigh, module.DiffTypeLicenseAdded)
@@ -65,7 +58,7 @@ func (hnd *licenseComparer) licenseAdded(nextHnd licenseChangeHandler) licenseCh
 }
 
 // License not found
-func (hnd *licenseComparer) licenseNotFound(nextHnd licenseChangeHandler) licenseChangeHandler {
+func (hnd Handler) licenseNotFound(nextHnd licenseChangeHandler) licenseChangeHandler {
 	return compareLicensesFunc(func(md module.Module, mdUp module.Module, addDff addDifference) {
 		if !md.License.Found() && !mdUp.License.Found() {
 			addDff(md, mdUp, module.DiffWeightLow, module.DiffTypeLicenseNotFound)
@@ -76,7 +69,7 @@ func (hnd *licenseComparer) licenseNotFound(nextHnd licenseChangeHandler) licens
 }
 
 // License removed
-func (hnd *licenseComparer) licenseRemoved(nextHnd licenseChangeHandler) licenseChangeHandler {
+func (hnd Handler) licenseRemoved(nextHnd licenseChangeHandler) licenseChangeHandler {
 	return compareLicensesFunc(func(md module.Module, mdUp module.Module, addDff addDifference) {
 		if md.License.Found() && !mdUp.License.Found() {
 			addDff(md, mdUp, module.DiffWeightHigh, module.DiffTypeLicenseRemoved)
@@ -87,7 +80,7 @@ func (hnd *licenseComparer) licenseRemoved(nextHnd licenseChangeHandler) license
 }
 
 // Minor changes in the same license
-func (hnd *licenseComparer) minorChanges(nextHnd licenseChangeHandler) licenseChangeHandler {
+func (hnd Handler) minorChanges(nextHnd licenseChangeHandler) licenseChangeHandler {
 	return compareLicensesFunc(func(md module.Module, mdUp module.Module, addDff addDifference) {
 		if md.License.Name == mdUp.License.Name {
 			addDff(md, mdUp, module.DiffWeightLow, module.DiffTypeLicenseMinorChanges)
@@ -98,14 +91,14 @@ func (hnd *licenseComparer) minorChanges(nextHnd licenseChangeHandler) licenseCh
 }
 
 // License changed to more restrictive
-func (hnd *licenseComparer) moreRestrictive() licenseChangeHandler {
+func (hnd Handler) moreRestrictive() licenseChangeHandler {
 	return compareLicensesFunc(func(md module.Module, mdUp module.Module, addDff addDifference) {
 		addDff(md, mdUp, module.DiffWeightHigh, module.DiffTypeLicenseMoreStrictChanged)
 	})
 }
 
 // Same license
-func (hnd *licenseComparer) sameLicense(nextHnd licenseChangeHandler) licenseChangeHandler {
+func (hnd Handler) sameLicense(nextHnd licenseChangeHandler) licenseChangeHandler {
 	return compareLicensesFunc(func(md module.Module, mdUp module.Module, addDff addDifference) {
 		if md.License.Hash == mdUp.License.Hash {
 			return
