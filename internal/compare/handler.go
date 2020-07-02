@@ -17,6 +17,7 @@ const pkg = "compare"
 type Handler struct {
 	dwnHnd download.Handler
 	lgr    logger.Logger
+	licCmp *licenseComparer
 	licHnd license.Handler
 	mdHnd  module.Handler
 	vlnHnd vulnerability.Handler
@@ -27,6 +28,7 @@ func Init(dwnHnd download.Handler, lgr logger.Logger, licHnd license.Handler, md
 	return &Handler{
 		dwnHnd: dwnHnd,
 		lgr:    lgr,
+		licCmp: initLicenseComparer(),
 		licHnd: licHnd,
 		mdHnd:  mdHnd,
 		vlnHnd: vlnHnd,
@@ -58,76 +60,16 @@ func (hnd Handler) InitializeClassifiers() output.Output {
 	return out
 }
 
+// Checks if in updated module are some changes in license
 func (hnd Handler) addLicenseDifferences(md, mdUp module.Module, dffs *module.Differences) output.Output {
 	out := output.Create(pkg + ".addLicenseDifferences")
 
-	// Checks if in updated module are some changes in license
 	md.License = hnd.licHnd.FindLicense(md.Dir)
 	mdUp.License = hnd.licHnd.FindLicense(mdUp.Dir)
 
-	if !md.License.Found() && !mdUp.License.Found() {
-		dffs.AddModules(md, mdUp, module.DiffWeightLow, module.DiffTypeLicenseNotFound)
-		hnd.lgr.Debug(fmt.Sprintf("Module %s -> %s differences %d", md, mdUp, module.DiffTypeLicenseNotFound))
-		return out
-	}
-
-	if md.License.Hash == mdUp.License.Hash {
-		return out
-	}
-
-	if md.License.Found() && !mdUp.License.Found() {
-		dffs.AddModules(md, mdUp, module.DiffWeightHigh, module.DiffTypeLicenseRemoved)
-		hnd.lgr.Debug(fmt.Sprintf("Module %s -> %s differences %d", md, mdUp, module.DiffTypeLicenseRemoved))
-		return out
-	}
-
-	if !md.License.Found() && mdUp.License.Found() {
-		dffs.AddModules(md, mdUp, module.DiffWeightHigh, module.DiffTypeLicenseAdded)
-		hnd.lgr.Debug(fmt.Sprintf("Module %s -> %s differences %d", md, mdUp, module.DiffTypeLicenseAdded))
-		return out
-	}
-
-	return hnd.addLicenseTypeDifferences(md, mdUp, dffs)
-}
-
-func (hnd Handler) addLicenseTypeDifferences(md, mdUp module.Module, dffs *module.Differences) output.Output {
-	out := output.Create(pkg + ".addLicenseTypeDifferences")
-
-	// Identify license name and type
-	hnd.licHnd.IdentifyType(&md.License)
-	hnd.licHnd.IdentifyType(&mdUp.License)
-
-	// Minor changes in the same license
-	if md.License.Name == mdUp.License.Name {
-		hnd.lgr.Debug(fmt.Sprintf("Module %s -> %s differences %d", md, mdUp, module.DiffTypeLicenseMinorChanges))
-		dffs.AddModules(md, mdUp, module.DiffWeightLow, module.DiffTypeLicenseMinorChanges)
-		return out
-	}
-
-	// License name changed maintaining restrictiveness type
-	if md.License.Type == mdUp.License.Type && md.License.Name != mdUp.License.Name {
-		hnd.lgr.Debug(fmt.Sprintf("Module %s -> %s differences %d", md, mdUp, module.DiffTypeLicenseNameChanged))
-		dffs.AddModules(md, mdUp, module.DiffWeightMedium, module.DiffTypeLicenseNameChanged)
-		return out
-	}
-
-	// License changed to less restrictive
-	if !md.License.IsMoreRestrictive(mdUp.License.Type) {
-		hnd.lgr.Debug(fmt.Sprintf("Module %s -> %s differences %d", md, mdUp, module.DiffTypeLicenseLessStrictChanged))
-		dffs.AddModules(md, mdUp, module.DiffWeightLow, module.DiffTypeLicenseLessStrictChanged)
-		return out
-	}
-
-	// License changed to more restrictive with critical restrictiveness
-	if mdUp.License.IsCritical() {
-		hnd.lgr.Debug(fmt.Sprintf("Module %s -> %s differences %d", md, mdUp, module.DiffTypeLicenseMoreStrictChanged))
-		dffs.AddModules(md, mdUp, module.DiffWeightCritical, module.DiffTypeLicenseMoreStrictChanged)
-		return out
-	}
-
-	// License changed to more restrictive
-	hnd.lgr.Debug(fmt.Sprintf("Module %s -> %s differences %d", md, mdUp, module.DiffTypeLicenseMoreStrictChanged))
-	dffs.AddModules(md, mdUp, module.DiffWeightHigh, module.DiffTypeLicenseMoreStrictChanged)
+	cmpType := hnd.licCmp.minorChanges(hnd.licCmp.changedSameRestrictiveness(hnd.licCmp.lessRestrictive(hnd.licCmp.criticalRestrictiveness(hnd.licCmp.moreRestrictive()))))
+	cmp := hnd.licCmp.licenseNotFound(hnd.licCmp.sameLicense(hnd.licCmp.licenseRemoved(hnd.licCmp.licenseAdded(cmpType))))
+	cmp.compareLicenses(md, mdUp, dffs.AddModules)
 	return out
 }
 
@@ -151,7 +93,6 @@ func (hnd Handler) addNewModuleDifferences(upMd module.Module, dffs *module.Diff
 
 	// Add license
 	upMd.License = hnd.licHnd.FindLicense(upMd.Dir)
-	hnd.licHnd.IdentifyType(&upMd.License)
 	if upMd.License.IsCritical() {
 		dffs.AddModule(upMd, module.DiffWeightCritical, module.DiffTypeNewSubmodule)
 		return out

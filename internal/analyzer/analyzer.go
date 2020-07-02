@@ -89,7 +89,6 @@ func (hnd Analyze) analyzeModule(md *module.Module) output.Output {
 	}
 
 	md.License = hnd.licHnd.FindLicense(md.Dir)
-	hnd.licHnd.IdentifyType(&md.License)
 	mdVlns, mdVlnsOut := hnd.vlnHnd.ModuleVulnerabilities(md.String())
 	if mdVlnsOut.HasError() {
 		return mdVlnsOut

@@ -38,22 +38,16 @@ func (m mockLicenseHandler) FindLicense(dir string) license.License {
 		return license.License{}
 	}
 
-	var hash string
-	if dir[0] == 100 { // d - different
-		hash = newHash()
-	} else if dir[0] == 101 { // e - equal
-		hash = "owuem4353m4cewhf"
+	var lic license.License
+	lic.Path = dir
+	if lic.Path[0] == 100 { // d - different
+		lic.Hash = newHash()
+	} else if lic.Path[0] == 101 { // e - equal
+		lic.Hash = "owuem4353m4cewhdf"
 	}
 
-	return license.License{
-		Hash: hash,
-		Path: dir,
-	}
-}
-
-func (mockLicenseHandler) IdentifyType(lic *license.License) {
 	if len(lic.Path) < 2 {
-		return
+		return lic
 	}
 
 	if lic.Path[1] == 100 { // d - different
@@ -63,7 +57,7 @@ func (mockLicenseHandler) IdentifyType(lic *license.License) {
 	}
 
 	if len(lic.Path) < 3 {
-		return
+		return lic
 	}
 
 	switch lic.Path[2] {
@@ -82,6 +76,8 @@ func (mockLicenseHandler) IdentifyType(lic *license.License) {
 	case 103: // g
 		lic.Type = license.Forbidden
 	}
+
+	return lic
 }
 
 func (mockLicenseHandler) InitializeClassifier() output.Output {

@@ -20,7 +20,6 @@ const confidenceThreshold = float64(0.9)
 //Handler handles functions related to license identification
 type Handler interface {
 	FindLicense(dir string) License
-	IdentifyType(lic *License)
 	InitializeClassifier() output.Output
 }
 
@@ -53,29 +52,9 @@ func (hnd handler) FindLicense(dir string) License {
 		return lic
 	}
 	lic.Hash = flHash
+	hnd.identifyType(&lic)
 
 	return lic
-}
-
-// IdentifyType identifies license name and type
-func (hnd handler) IdentifyType(lic *License) {
-	if lic.Path == "" {
-		hnd.lgr.Debug("Empty path during license identification")
-		return
-	}
-	content, err := ioutil.ReadFile(lic.Path)
-	if err != nil {
-		hnd.lgr.Debug(fmt.Sprintf("Error reading license file from path %s with error %s", lic.Path, err.Error()))
-		return
-	}
-	matches := hnd.cls.MultipleMatch(string(content), true)
-	if len(matches) == 0 {
-		hnd.lgr.Debug("Unknown license during license identification")
-		return
-	}
-
-	lic.Name = matches[0].Name
-	lic.Type = Type(licenseclassifier.LicenseType(lic.Name))
 }
 
 //InitializeClassifier Initialize licenses classifier
@@ -118,6 +97,26 @@ func (hnd handler) isLicense(flName string) bool {
 	}
 
 	return false
+}
+
+func (hnd handler) identifyType(lic *License) {
+	if lic.Path == "" {
+		hnd.lgr.Debug("Empty path during license identification")
+		return
+	}
+	content, err := ioutil.ReadFile(lic.Path)
+	if err != nil {
+		hnd.lgr.Debug(fmt.Sprintf("Error reading license file from path %s with error %s", lic.Path, err.Error()))
+		return
+	}
+	matches := hnd.cls.MultipleMatch(string(content), true)
+	if len(matches) == 0 {
+		hnd.lgr.Debug("Unknown license during license identification")
+		return
+	}
+
+	lic.Name = matches[0].Name
+	lic.Type = Type(licenseclassifier.LicenseType(lic.Name))
 }
 
 func (hnd handler) licensePath(dir string) (string, output.Output) {
