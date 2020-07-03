@@ -1,4 +1,4 @@
-# v0.8.0 (2020.06.25)
+# v0.8.0 (2020.07.03)
 
 #### Features
 - Implement optional prompt for update confirmation for updates with changes

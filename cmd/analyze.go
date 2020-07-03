@@ -13,7 +13,7 @@ import (
 var (
 	analyzeCmd = &cobra.Command{
 		Use:   "analyze",
-		Short: "Analyze current state",
+		Short: "Analyze current dependencies",
 		Long:  `Analyze licenses and vulnerabilities of current dependencies`,
 		Run: func(cmd *cobra.Command, args []string) {
 			analyze(cmd)
