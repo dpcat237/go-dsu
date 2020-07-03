@@ -1,70 +1,63 @@
 package module
 
-import (
-	"bytes"
-	"fmt"
-
-	"github.com/olekukonko/tablewriter"
-)
+import "fmt"
 
 var tablePreviewHeader = []string{"Direct Module", "Version", "New Version", "Changes"}
 
-// ToPreviewTable generates a table for CLI with available updates
-func (mds Modules) ToPreviewTable() string {
-	var wrt bytes.Buffer
-	tbl := tablewriter.NewWriter(&wrt)
-	tbl.SetHeader(tablePreviewHeader)
-	tbl.SetAutoMergeCells(true)
-	tbl.SetRowLine(true)
+// GeneratePreviewTable generates a table for CLI with available updates
+func (tbl Table) GeneratePreviewTable(mds Modules) string {
+	tbl.printer.SetHeader(tablePreviewHeader)
+	tbl.printer.SetAutoMergeCells(true)
+	tbl.printer.SetRowLine(true)
 
 	for _, md := range mds {
-		md.addModulePreviewRows(tbl)
+		tbl.addModulePreviewRows(md)
 	}
-	tbl.Render()
+	tbl.printer.Render()
 
-	return wrt.String()
+	return tbl.writer.String()
 }
 
-func (md Module) addModulePreviewRows(tbl *tablewriter.Table) {
-	dataBase := md.previewRowBase()
+func (tbl *Table) addModulePreviewRows(md Module) {
+	dataBase := tbl.previewRowBase(md)
 	if len(md.UpdateDifferences) == 0 {
 		dataBase = append(dataBase, "")
-		tbl.Rich(dataBase, md.rowColors(colorGreen, colorWhite, colorWhite, colorWhite))
+		tbl.printer.Rich(dataBase, tbl.rowColors(colorGreen, colorWhite, colorWhite, colorWhite))
 		return
 	}
 
 	if len(md.UpdateDifferences) == 1 {
 		dff := md.UpdateDifferences[0]
-		dataBase = append(dataBase, md.differenceToString(dff))
-		cls := md.rowColors(md.levelToColor(dff.Level), colorWhite, colorWhite, md.levelToColor(dff.Level))
-		tbl.Rich(dataBase, cls)
+		dataBase = append(dataBase, tbl.differenceToString(dff))
+		cls := tbl.rowColors(tbl.levelToColor(dff.Level), colorWhite, colorWhite, tbl.levelToColor(dff.Level))
+		tbl.printer.Rich(dataBase, cls)
 		return
 	}
 
-	md.addUpdateDifferencesRows(tbl)
+	tbl.addUpdateDifferencesRows(md)
 }
 
-func (md Module) addUpdateDifferencesRows(tbl *tablewriter.Table) {
-	dataBase := md.previewRowBase()
+func (tbl *Table) addUpdateDifferencesRows(md Module) {
+	dataBase := tbl.previewRowBase(md)
 	var data []string
 	fst := false
 	hgLvl := md.UpdateDifferences.highestLevel()
 	for _, dff := range md.UpdateDifferences {
 		data = dataBase
-		data = append(data, md.differenceToString(dff))
+		data = append(data, tbl.differenceToString(dff))
 		if fst {
-			cls := md.rowColors(md.levelToColor(hgLvl), colorWhite, colorWhite, md.levelToColor(dff.Level))
-			tbl.Rich(data, cls)
+			cls := tbl.rowColors(tbl.levelToColor(hgLvl), colorWhite, colorWhite, tbl.levelToColor(dff.Level))
+			tbl.printer.Rich(data, cls)
 			continue
 		}
 
-		cls := md.rowColors(md.levelToColor(md.UpdateDifferences.highestLevel()), colorWhite, colorWhite, md.levelToColor(dff.Level))
-		tbl.Rich(data, cls)
+		cls := tbl.rowColors(tbl.levelToColor(md.UpdateDifferences.highestLevel()), colorWhite, colorWhite, tbl.levelToColor(dff.Level))
+		tbl.printer.Rich(data, cls)
 		fst = true
 	}
 }
 
-func (md Module) differenceToString(dff Difference) string {
+func (tbl Table) differenceToString(dff Difference) string {
 	var ln string
 	switch dff.Type {
 	case DiffTypeModuleFetchError:
@@ -95,7 +88,7 @@ func (md Module) differenceToString(dff Difference) string {
 	return ln
 }
 
-func (md Module) levelToColor(lvl DiffLevel) tableColor {
+func (tbl Table) levelToColor(lvl DiffLevel) tableColor {
 	cl := colorWhite
 	switch lvl {
 	case DiffWeightLow:
@@ -110,7 +103,7 @@ func (md Module) levelToColor(lvl DiffLevel) tableColor {
 	return cl
 }
 
-func (md Module) previewRowBase() []string {
+func (tbl Table) previewRowBase(md Module) []string {
 	return []string{
 		md.Path,
 		md.Version,

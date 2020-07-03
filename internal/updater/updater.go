@@ -169,7 +169,8 @@ func (upd Updater) updateDirectModules(mds module.Modules, opt UpdateOptions) ou
 		}
 
 		md.UpdateDifferences = dfs
-		fmt.Println(module.Modules{md}.ToPreviewTable())
+		tbl := module.NewTable()
+		fmt.Println(tbl.GeneratePreviewTable(module.Modules{md}))
 		if !upd.exc.PromptConfirmation("Update this module? (y/n):") {
 			continue
 		}

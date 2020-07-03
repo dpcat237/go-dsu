@@ -98,8 +98,9 @@ func (hnd Preview) processPreview(mds module.Modules, bar *progressbar.ProgressB
 
 	wg.Wait()
 	hnd.addProgress(bar, 90-each*tt)
+	tbl := module.NewTable()
 
-	return out.WithResponse(mds.ToPreviewTable())
+	return out.WithResponse(tbl.GeneratePreviewTable(mds))
 }
 
 func (hnd Preview) updateProjectPath(mdPth string) output.Output {

@@ -144,8 +144,9 @@ func (hnd Analyze) processAnalyzeDependencies(mds module.Modules, bar *progressb
 
 	wg.Wait()
 	hnd.addProgress(bar, 90-each*tt)
+	tbl := module.NewTable()
 
-	return out.WithResponse(mds.ToAnalyzeTable())
+	return out.WithResponse(tbl.GenerateAnalyzeTable(mds))
 }
 
 func (hnd Analyze) updateProjectPath(mdPth string) output.Output {

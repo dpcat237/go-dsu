@@ -1,6 +1,8 @@
 package module
 
 import (
+	"bytes"
+
 	"github.com/olekukonko/tablewriter"
 )
 
@@ -15,7 +17,19 @@ const (
 
 type tableColor uint16
 
-func (md Module) cellColor(clTp tableColor) tablewriter.Colors {
+type Table struct {
+	printer *tablewriter.Table
+	writer  *bytes.Buffer
+}
+
+func NewTable() Table {
+	var tbl Table
+	tbl.writer = &bytes.Buffer{}
+	tbl.printer = tablewriter.NewWriter(tbl.writer)
+	return tbl
+}
+
+func (tbl Table) cellColor(clTp tableColor) tablewriter.Colors {
 	cl := tablewriter.FgWhiteColor
 	switch clTp {
 	case colorWhite:
@@ -34,10 +48,10 @@ func (md Module) cellColor(clTp tableColor) tablewriter.Colors {
 	return tablewriter.Colors{tablewriter.Normal, cl}
 }
 
-func (md Module) rowColors(clsTb ...tableColor) []tablewriter.Colors {
+func (tbl Table) rowColors(clsTb ...tableColor) []tablewriter.Colors {
 	var cls []tablewriter.Colors
 	for _, clTb := range clsTb {
-		cls = append(cls, md.cellColor(clTb))
+		cls = append(cls, tbl.cellColor(clTb))
 	}
 	return cls
 }
