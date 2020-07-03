@@ -65,8 +65,9 @@ func (hnd Handler) addLicenseDifferences(md, mdUp module.Module, dffs *module.Di
 	md.License = hnd.licHnd.FindLicense(md.Dir)
 	mdUp.License = hnd.licHnd.FindLicense(mdUp.Dir)
 
-	cmpType := hnd.minorChanges(hnd.changedSameRestrictiveness(hnd.lessRestrictive(hnd.criticalRestrictiveness(hnd.moreRestrictive()))))
-	cmp := hnd.licenseNotFound(hnd.sameLicense(hnd.licenseRemoved(hnd.licenseAdded(cmpType))))
+	var licCmp licenseComparer
+	cmpType := licCmp.minorChanges(licCmp.changedSameRestrictiveness(licCmp.lessRestrictive(licCmp.criticalRestrictiveness(licCmp.moreRestrictive()))))
+	cmp := licCmp.licenseNotFound(licCmp.sameLicense(licCmp.licenseRemoved(licCmp.licenseAdded(cmpType))))
 	cmp.compareLicenses(md, mdUp, dffs.AddModules)
 	return out
 }
