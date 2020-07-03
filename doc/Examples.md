@@ -17,7 +17,7 @@
 
 Example output 
 
-![](images/analyze cobra.png)
+![](images/analyze-cobra.png)
 
 #### Preview available updates with changes of a local project
 
