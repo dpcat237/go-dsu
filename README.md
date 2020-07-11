@@ -10,7 +10,7 @@
 Go DSU (Dependencies Secure Updater) - provides tools to update Go dependencies with more control than default Go tools. 
 
 Now `go-dsu` allows:
-- List vulnerabilities and license of direct dependencies and sub dependencies
+- List vulnerabilities and license dependencies and sub dependencies
 - Preview available dependencies updates with vulnerabilities and changes in license
 - Update dependencies using one of available modes
 
