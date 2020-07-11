@@ -55,3 +55,7 @@ Example output
 #### Update direct dependencies with confirmation for updates with changes. Changes are displayed. 
 
 `$ go-dsu update -p`
+
+### Legend of changes severity
+
+![](images/colors-legend.png)

@@ -50,9 +50,5 @@ Use "go-dsu [command] --help" for more information about a command.
 
 ### [Usage examples](doc/Examples.md)
 
-#### Legend of changes severity
-
-![](doc/images/colors-legend.png)
-
 ## Contributing
 Go DSU is an open source project and contributions are welcome! Check out the [Issues](https://github.com/dpcat237/go-dsu/issues) or create a new one after reading [Code of Conduct](.github/CODE_OF_CONDUCT.md).
