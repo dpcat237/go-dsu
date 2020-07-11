@@ -74,22 +74,6 @@ func (md Module) PathCleaned() string {
 	return md.Path
 }
 
-func (md *Module) mapDependency(subMd Module) {
-	if _, ok := md.DependenciesMap[subMd.String()]; !ok {
-		md.DependenciesMap[subMd.String()] = subMd
-	}
-}
-
-func (md *Module) mapDependencies(subMds []Module) {
-	if len(subMds) == 0 {
-		return
-	}
-	for _, subMd := range subMds {
-		md.mapDependency(subMd)
-		md.mapDependencies(subMd.Dependencies)
-	}
-}
-
 // newVersion returns the version of the update taking in account any Replace settings
 func (md Module) newVersion() string {
 	mod := md

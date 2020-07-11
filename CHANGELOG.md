@@ -1,3 +1,10 @@
+# v0.9.0 (2020.07.11)
+
+#### Features
+- Change to display all modules in one column
+- Check vulnerabilities require auth data to prevent server error
+- Check vulnerabilities in analyze and preview commands change to optional
+
 # v0.8.0 (2020.07.03)
 
 #### Features

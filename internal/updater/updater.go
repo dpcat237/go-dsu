@@ -45,7 +45,8 @@ func (upd Updater) UpdateModules(opt UpdateOptions) output.Output {
 	out := output.Create(pkg + ".UpdateModules")
 
 	upd.dwnHnd.CleanTemporaryData()
-	mds, mdsOut := upd.mdHnd.ListAvailable(true, true)
+	fmt.Println("Update dependencies...")
+	mds, mdsOut := upd.mdHnd.ListAvailable(false, true)
 	if mdsOut.HasError() {
 		return mdsOut
 	}
@@ -53,7 +54,7 @@ func (upd Updater) UpdateModules(opt UpdateOptions) output.Output {
 		return out.WithResponse("All dependencies up to date")
 	}
 
-	if opt.IsIndirect {
+	if opt.IsAll {
 		return upd.updateAll()
 	}
 
@@ -69,12 +70,12 @@ func (upd Updater) UpdateModules(opt UpdateOptions) output.Output {
 		}
 	}
 
-	if clsOut := upd.cmpHnd.InitializeClassifiers(); out.HasError() {
+	if clsOut := upd.cmpHnd.InitializeClassifiers(); clsOut.HasError() {
 		return clsOut
 	}
 	defer upd.dwnHnd.CleanTemporaryData()
 
-	return upd.updateDirectModules(mds, opt)
+	return upd.updateModules(mds, opt)
 }
 
 func (upd Updater) runLocalTests() output.Output {
@@ -99,7 +100,7 @@ func (upd Updater) rollback(m module.Module) output.Output {
 	return out
 }
 
-// updateAll updates direct and indirect modules
+// updateAll updates modules without verifications
 func (upd Updater) updateAll() output.Output {
 	out := output.Create(pkg + ".updateAll")
 
@@ -114,8 +115,8 @@ func (upd Updater) updateAll() output.Output {
 	return out.WithResponse(fmt.Sprintf("Successfully updated: \n %s", excRsp.StdOutputString()))
 }
 
-// updateDirectModule updates direct module
-func (upd Updater) updateDirectModule(m module.Module, opt UpdateOptions, vnd bool) output.Output {
+// updateModule updates module
+func (upd Updater) updateModule(m module.Module, opt UpdateOptions, vnd bool) output.Output {
 	out := output.Create(pkg + ".updateModule")
 	excRsp, cmdOut := upd.exc.ExecProject(fmt.Sprintf("get %s", m.NewModule()))
 	if cmdOut.HasError() {
@@ -144,14 +145,14 @@ func (upd Updater) updateDirectModule(m module.Module, opt UpdateOptions, vnd bo
 	return out
 }
 
-// updateDirectModules updates direct modules
-func (upd Updater) updateDirectModules(mds module.Modules, opt UpdateOptions) output.Output {
+// updateModules updates modules after selected verifications
+func (upd Updater) updateModules(mds module.Modules, opt UpdateOptions) output.Output {
 	out := output.Create(pkg + ".updateAll")
 	vnd := upd.exc.ExistsInProject(vendorFolder)
 
 	for _, md := range mds {
 		if !opt.IsPrompt {
-			if mOut := upd.updateDirectModule(md, opt, vnd); mOut.HasError() {
+			if mOut := upd.updateModule(md, opt, vnd); mOut.HasError() {
 				return mOut
 			}
 			continue
@@ -162,7 +163,7 @@ func (upd Updater) updateDirectModules(mds module.Modules, opt UpdateOptions) ou
 			upd.lgr.Debug(dfsOut.String())
 		}
 		if len(dfs) == 0 {
-			if mOut := upd.updateDirectModule(md, opt, vnd); mOut.HasError() {
+			if mOut := upd.updateModule(md, opt, vnd); mOut.HasError() {
 				return mOut
 			}
 			continue
@@ -174,7 +175,7 @@ func (upd Updater) updateDirectModules(mds module.Modules, opt UpdateOptions) ou
 		if !upd.exc.PromptConfirmation("Update this module? (y/n):") {
 			continue
 		}
-		if mOut := upd.updateDirectModule(md, opt, vnd); mOut.HasError() {
+		if mOut := upd.updateModule(md, opt, vnd); mOut.HasError() {
 			return mOut
 		}
 	}

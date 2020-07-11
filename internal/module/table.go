@@ -18,8 +18,9 @@ const (
 type tableColor uint16
 
 type Table struct {
-	printer *tablewriter.Table
-	writer  *bytes.Buffer
+	printer         *tablewriter.Table
+	vulnerabilities bool
+	writer          *bytes.Buffer
 }
 
 func NewTable() Table {

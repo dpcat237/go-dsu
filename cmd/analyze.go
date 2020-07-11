@@ -25,6 +25,9 @@ func init() {
 	rootCmd.AddCommand(analyzeCmd)
 	analyzeCmd.Flags().Bool("dev", false, "Development mode")
 	analyzeCmd.Flags().String("path", "", "Preview project from git path. Eg. github.com/spf13/cobra")
+	analyzeCmd.Flags().String("ossemail", "", "OSS Index email")
+	analyzeCmd.Flags().String("osstoken", "", "OSS Index API")
+	analyzeCmd.Flags().String("oss", "", "OSS Index API encoded token base64(email:token)")
 }
 
 func analyze(cmd *cobra.Command) {
@@ -33,13 +36,13 @@ func analyze(cmd *cobra.Command) {
 		mod = output.ModeDev
 	}
 
-	fmt.Println("Analyzing dependencies...")
+	fmt.Println("Analyzing prerequisites...")
 	if out := checkPrerequisites(); out.HasError() {
 		fmt.Println(out.ToString(mod))
 		return
 	}
 
-	anz, initOut := service.InitAnalyzer(mod)
+	anz, initOut := service.InitAnalyzer(mod, extractOSSToken(cmd))
 	if initOut.HasError() {
 		fmt.Println(initOut.ToString(mod))
 		os.Exit(1)

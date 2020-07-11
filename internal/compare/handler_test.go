@@ -30,6 +30,10 @@ func (mockDownloadHandler) FolderAccessible(pth string) bool {
 	return false
 }
 
+func (mockDownloadHandler) GitDownload(mdPth string) (string, output.Output) {
+	return "", output.Output{}
+}
+
 type mockLicenseHandler struct {
 }
 
@@ -130,6 +134,10 @@ type mockVulnerabilityHandler struct {
 
 func (mockVulnerabilityHandler) ModuleVulnerabilities(pth string) (vulnerability.Vulnerabilities, output.Output) {
 	return nil, output.Output{}
+}
+
+func (mockVulnerabilityHandler) IsSet() bool {
+	return false
 }
 
 func TestHandler_addLicenseDifferences(t *testing.T) {
@@ -596,7 +604,10 @@ func newHash(n ...int) string {
 	randString := randomString(noRandomCharacters)
 
 	hash := md5.New()
-	hash.Write([]byte(randString))
+	_, err := hash.Write([]byte(randString))
+	if err != nil {
+		panic(err)
+	}
 	bs := hash.Sum(nil)
 
 	return fmt.Sprintf("%x", bs)

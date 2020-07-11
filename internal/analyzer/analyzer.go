@@ -45,13 +45,14 @@ func (hnd Analyze) AnalyzeDependencies(pth string) output.Output {
 	bar := progressbar.Default(100)
 
 	hnd.dwnHnd.CleanTemporaryData()
+	fmt.Println("Analyzing dependencies...")
 	hnd.addProgress(bar, 5)
 
 	if pthOut := hnd.updateProjectPath(pth); pthOut.HasError() {
 		return pthOut
 	}
 
-	mds, mdsOut := hnd.mdHnd.ListAvailable(true, false)
+	mds, mdsOut := hnd.mdHnd.ListAvailable(false, false)
 	if mdsOut.HasError() {
 		return mdsOut
 	}
@@ -61,7 +62,7 @@ func (hnd Analyze) AnalyzeDependencies(pth string) output.Output {
 	}
 	hnd.addProgress(bar, 5)
 
-	if licOut := hnd.licHnd.InitializeClassifier(); out.HasError() {
+	if licOut := hnd.licHnd.InitializeClassifier(); licOut.HasError() {
 		return licOut
 	}
 
@@ -89,45 +90,28 @@ func (hnd Analyze) analyzeModule(md *module.Module) output.Output {
 	}
 
 	md.License = hnd.licHnd.FindLicense(md.Dir)
+	if !hnd.vlnHnd.IsSet() {
+		return out
+	}
+
 	mdVlns, mdVlnsOut := hnd.vlnHnd.ModuleVulnerabilities(md.String())
 	if mdVlnsOut.HasError() {
 		return mdVlnsOut
 	}
 	md.Vulnerabilities = mdVlns
 
-	subMds, subMdsOut := hnd.analyzeModuleDependencies(*md)
-	if subMdsOut.HasError() {
-		return subMdsOut
-	}
-	md.Dependencies = subMds
-
 	return out
 }
 
 func (hnd Analyze) analyzeModuleGoroutine(md *module.Module, wg *sync.WaitGroup, bar *progressbar.ProgressBar, each int) {
 	if out := hnd.analyzeModule(md); out.HasError() {
+		if out.IsToManyRequests() {
+			hnd.lgr.Fatal(out.String())
+		}
 		hnd.lgr.Debug(out.String())
 	}
 	hnd.addProgress(bar, each)
 	wg.Done()
-}
-
-func (hnd Analyze) analyzeModuleDependencies(md module.Module) ([]module.Module, output.Output) {
-	out := output.Create(pkg + ".analyzeModuleDependencies")
-	var mds []module.Module
-	subMds, mdsOut := hnd.mdHnd.ListSubModules(md.Dir)
-	if mdsOut.HasError() {
-		return mds, mdsOut
-	}
-
-	for _, subMd := range subMds {
-		if out := hnd.analyzeModule(&subMd); out.HasError() {
-			hnd.lgr.Debug(out.String())
-		}
-		mds = append(mds, subMd)
-	}
-
-	return mds, out
 }
 
 func (hnd Analyze) processAnalyzeDependencies(mds module.Modules, bar *progressbar.ProgressBar) output.Output {
@@ -146,7 +130,7 @@ func (hnd Analyze) processAnalyzeDependencies(mds module.Modules, bar *progressb
 	hnd.addProgress(bar, 90-each*tt)
 	tbl := module.NewTable()
 
-	return out.WithResponse(tbl.GenerateAnalyzeTable(mds))
+	return out.WithResponse(tbl.GenerateAnalyzeTable(mds, hnd.vlnHnd.IsSet()))
 }
 
 func (hnd Analyze) updateProjectPath(mdPth string) output.Output {
@@ -155,7 +139,7 @@ func (hnd Analyze) updateProjectPath(mdPth string) output.Output {
 		return out
 	}
 
-	dir, dirOut := hnd.dwnHnd.DownloadModule(mdPth)
+	dir, dirOut := hnd.dwnHnd.GitDownload(mdPth)
 	if dirOut.HasError() {
 		return dirOut
 	}

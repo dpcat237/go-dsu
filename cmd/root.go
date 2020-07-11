@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"encoding/base64"
 	"fmt"
 	"os"
 
@@ -31,4 +32,16 @@ func checkPrerequisites() output.Output {
 		return out.WithErrorString("Check your Internet connection")
 	}
 	return out
+}
+
+func extractOSSToken(cmd *cobra.Command) string {
+	if cmd.Flag("oss").Value.String() != "" {
+		return cmd.Flag("oss").Value.String()
+	}
+
+	if cmd.Flag("ossemail").Value.String() != "" && cmd.Flag("osstoken").Value.String() != "" {
+		tkn := cmd.Flag("ossemail").Value.String() + ":" + cmd.Flag("osstoken").Value.String()
+		return base64.StdEncoding.EncodeToString([]byte(tkn))
+	}
+	return ""
 }

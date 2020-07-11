@@ -15,7 +15,7 @@ import (
 )
 
 //InitAnalyzer initializes required dependencies for analyzer
-func InitAnalyzer(mod output.Mode) (*analyzer.Analyze, output.Output) {
+func InitAnalyzer(mod output.Mode, ossTkn string) (*analyzer.Analyze, output.Output) {
 	var out output.Output
 	lgr, lgrOut := logger.Init(mod)
 	if lgrOut.HasError() {
@@ -29,14 +29,17 @@ func InitAnalyzer(mod output.Mode) (*analyzer.Analyze, output.Output) {
 
 	licHnd := license.InitHandler(lgr)
 	dwnHnd := download.InitHandler(exc, lgr)
-	vlnHnd := vulnerability.InitHandler(lgr)
+	vlnHnd, vlnOut := vulnerability.InitHandler(lgr, ossTkn)
+	if vlnOut.HasError() {
+		return nil, vlnOut
+	}
 	mdHnd := module.InitHandler(exc)
 
 	return analyzer.Init(dwnHnd, exc, lgr, licHnd, mdHnd, vlnHnd), out
 }
 
 //InitPreviewer initializes required dependencies for previewer
-func InitPreviewer(mod output.Mode) (*previewer.Preview, output.Output) {
+func InitPreviewer(mod output.Mode, ossTkn string) (*previewer.Preview, output.Output) {
 	var out output.Output
 	lgr, lgrOut := logger.Init(mod)
 	if lgrOut.HasError() {
@@ -51,7 +54,10 @@ func InitPreviewer(mod output.Mode) (*previewer.Preview, output.Output) {
 	dwnHnd := download.InitHandler(exc, lgr)
 	licHnd := license.InitHandler(lgr)
 	mdHnd := module.InitHandler(exc)
-	vlnHnd := vulnerability.InitHandler(lgr)
+	vlnHnd, vlnOut := vulnerability.InitHandler(lgr, ossTkn)
+	if vlnOut.HasError() {
+		return nil, vlnOut
+	}
 	cmpHnd := compare.Init(dwnHnd, lgr, licHnd, mdHnd, vlnHnd)
 
 	return previewer.Init(cmpHnd, dwnHnd, exc, lgr, mdHnd), out
@@ -73,7 +79,10 @@ func InitUpdater(mod output.Mode) (*updater.Updater, output.Output) {
 	dwnHnd := download.InitHandler(exc, lgr)
 	licHnd := license.InitHandler(lgr)
 	mdHnd := module.InitHandler(exc)
-	vlnHnd := vulnerability.InitHandler(lgr)
+	vlnHnd, vlnOut := vulnerability.InitHandler(lgr, "")
+	if vlnOut.HasError() {
+		return nil, vlnOut
+	}
 	cmpHnd := compare.Init(dwnHnd, lgr, licHnd, mdHnd, vlnHnd)
 
 	return updater.Init(cmpHnd, dwnHnd, exc, lgr, mdHnd), out

@@ -42,7 +42,7 @@ func (hnd Handler) AnalyzeUpdateDifferences(md module.Module) (module.Difference
 		return dffs, out
 	}
 
-	upOut := hnd.updateDifferencesSubModule(md, *md.Update, &dffs)
+	upOut := hnd.prepareAndFindDifferences(md, *md.Update, &dffs)
 	if upOut.HasError() {
 		return dffs, out
 	}
@@ -81,13 +81,15 @@ func (hnd Handler) addNewModuleDifferences(upMd module.Module, dffs *module.Diff
 	}
 
 	// Add vulnerabilities
-	mdUpVlns, mdUpVlnsOut := hnd.vlnHnd.ModuleVulnerabilities(upMd.String())
-	if mdUpVlnsOut.HasError() {
-		return mdUpVlnsOut
-	}
-	for _, mdUpVln := range mdUpVlns {
-		hnd.lgr.Debug(fmt.Sprintf("New module %s with vulnerability %s, type %d", upMd, mdUpVln.ID, module.DiffTypeNewVulnerability))
-		dffs.AddVulnerability(upMd, mdUpVln)
+	if hnd.vlnHnd.IsSet() {
+		mdUpVlns, mdUpVlnsOut := hnd.vlnHnd.ModuleVulnerabilities(upMd.String())
+		if mdUpVlnsOut.HasError() {
+			return mdUpVlnsOut
+		}
+		for _, mdUpVln := range mdUpVlns {
+			hnd.lgr.Debug(fmt.Sprintf("New module %s with vulnerability %s, type %d", upMd, mdUpVln.ID, module.DiffTypeNewVulnerability))
+			dffs.AddVulnerability(upMd, mdUpVln)
+		}
 	}
 
 	// Add license
@@ -127,61 +129,25 @@ func (hnd Handler) addVulnerabilityDifferences(md, mdUp module.Module, dffs *mod
 	return out
 }
 
-func (hnd Handler) updateDifferencesModule(md, mdUp module.Module, dffs *module.Differences) output.Output {
-	out := output.Create(pkg + ".updateDifferencesModule")
+func (hnd Handler) findDifferences(md, mdUp module.Module, dffs *module.Differences) output.Output {
+	out := output.Create(pkg + ".findDifferences")
 
 	if licOut := hnd.addLicenseDifferences(md, mdUp, dffs); licOut.HasError() {
 		return licOut
 	}
 
-	if vlnOut := hnd.addVulnerabilityDifferences(md, mdUp, dffs); vlnOut.HasError() {
-		return vlnOut
-	}
-
-	return out
-}
-
-func (hnd Handler) updateDifferencesSubModule(md, mdUp module.Module, dffs *module.Differences) output.Output {
-	out := output.Create(pkg + ".updateDifferencesSubModule")
-	if out := hnd.updateModuleDirectory(&md); out.HasError() {
-		dffs.AddModule(md, module.DiffWeightHigh, module.DiffTypeModuleFetchError)
-		return out
-	}
-	if out := hnd.updateModuleDirectory(&mdUp); out.HasError() {
-		dffs.AddModule(mdUp, module.DiffWeightHigh, module.DiffTypeModuleFetchError)
-		return out
-	}
-
-	upOut := hnd.updateDifferencesModule(md, mdUp, dffs)
-	if upOut.HasError() {
-		return out
-	}
-
-	subMds, mdsOut := hnd.mdHnd.ListSubModules(md.Dir)
-	if mdsOut.HasError() {
-		return out
-	}
-	if len(subMds) == 0 {
-		return out
-	}
-	subUpMds, mdsOut := hnd.mdHnd.ListSubModules(mdUp.Dir)
-	if mdsOut.HasError() {
-		return out
-	}
-
-	if subMdsOut := hnd.updateDifferencesSubModules(subMds, subUpMds, dffs); subMdsOut.HasError() {
-		return subMdsOut
-	}
-	return out
-}
-
-func (hnd Handler) updateDifferencesSubModules(subMds, subUpMds module.Modules, dffs *module.Differences) output.Output {
-	out := output.Create(fmt.Sprintf("%s.%s '%s'", pkg, "updateDifferencesSubModules", subMds))
-	for _, upMd := range subUpMds {
-		if upMd.Indirect {
-			continue
+	if hnd.vlnHnd.IsSet() {
+		if vlnOut := hnd.addVulnerabilityDifferences(md, mdUp, dffs); vlnOut.HasError() {
+			return vlnOut
 		}
+	}
 
+	return out
+}
+
+func (hnd Handler) findNewModules(subMds, subUpMds module.Modules, dffs *module.Differences) output.Output {
+	out := output.Create(fmt.Sprintf("%s.%s '%s'", pkg, "findNewModules", subMds))
+	for _, upMd := range subUpMds {
 		found := false
 		for _, md := range subMds {
 			if md.PathCleaned() != upMd.PathCleaned() {
@@ -192,9 +158,6 @@ func (hnd Handler) updateDifferencesSubModules(subMds, subUpMds module.Modules, 
 			if md.Version == upMd.Version {
 				break
 			}
-			if cmpOut := hnd.updateDifferencesSubModule(md, upMd, dffs); cmpOut.HasError() {
-				return cmpOut
-			}
 		}
 
 		if !found {
@@ -203,6 +166,37 @@ func (hnd Handler) updateDifferencesSubModules(subMds, subUpMds module.Modules, 
 			}
 		}
 	}
+	return out
+}
+
+func (hnd Handler) prepareAndFindDifferences(md, mdUp module.Module, dffs *module.Differences) output.Output {
+	out := output.Create(pkg + ".prepareAndFindDifferences")
+	if out := hnd.updateModuleDirectory(&md); out.HasError() {
+		dffs.AddModule(md, module.DiffWeightHigh, module.DiffTypeModuleFetchError)
+		return out
+	}
+	if out := hnd.updateModuleDirectory(&mdUp); out.HasError() {
+		dffs.AddModule(mdUp, module.DiffWeightHigh, module.DiffTypeModuleFetchError)
+		return out
+	}
+
+	upOut := hnd.findDifferences(md, mdUp, dffs)
+	if upOut.HasError() {
+		return out
+	}
+
+	subMds, mdsOut := hnd.mdHnd.ListSubModules(md.Dir)
+	if mdsOut.HasError() { // Happens with modules without go.mod
+		hnd.lgr.Debug(fmt.Sprintf("Error listing submodules of module %s", md.String()))
+	}
+	subUpMds, mdsOut := hnd.mdHnd.ListSubModules(mdUp.Dir)
+	if mdsOut.HasError() {
+		return out
+	}
+	if subMdsOut := hnd.findNewModules(subMds, subUpMds, dffs); subMdsOut.HasError() {
+		return subMdsOut
+	}
+
 	return out
 }
 

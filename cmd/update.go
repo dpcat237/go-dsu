@@ -14,8 +14,8 @@ import (
 var (
 	updateCmd = &cobra.Command{
 		Use:   "update",
-		Short: "Updater modules",
-		Long:  `Add missing and remove unused modules. Updater direct modules`,
+		Short: "Updater dependencies",
+		Long:  `Update dependencies`,
 		Run: func(cmd *cobra.Command, args []string) {
 			update(cmd)
 		},
@@ -25,9 +25,9 @@ var (
 func init() {
 	rootCmd.AddCommand(updateCmd)
 	updateCmd.Flags().Bool("dev", false, "Development mode")
-	updateCmd.Flags().BoolP("indirect", "i", false, "Updater all direct and indirect modules")
+	updateCmd.Flags().BoolP("all", "", false, "Updater all without verifications")
 	updateCmd.Flags().BoolP("prompt", "p", false, "Confirm in prompt updates with changes")
-	updateCmd.Flags().BoolP("select", "s", false, "Select direct modules to update")
+	updateCmd.Flags().BoolP("select", "s", false, "Select modules to update")
 	updateCmd.Flags().BoolP("tests", "t", false, "Run local tests after updating each module and rollback in case of errors")
 	updateCmd.Flags().BoolP("verbose", "v", false, "Print output")
 }
@@ -39,14 +39,14 @@ func update(cmd *cobra.Command) {
 	}
 
 	updOpt := updater.UpdateOptions{
-		IsIndirect: cmd.Flag("indirect").Changed,
-		IsPrompt:   cmd.Flag("prompt").Changed,
-		IsSelect:   cmd.Flag("select").Changed,
-		IsTests:    cmd.Flag("tests").Changed,
-		IsVerbose:  cmd.Flag("verbose").Changed,
+		IsAll:     cmd.Flag("all").Changed,
+		IsPrompt:  cmd.Flag("prompt").Changed,
+		IsSelect:  cmd.Flag("select").Changed,
+		IsTests:   cmd.Flag("tests").Changed,
+		IsVerbose: cmd.Flag("verbose").Changed,
 	}
 
-	fmt.Println("Analyzing dependencies...")
+	fmt.Println("Analyzing prerequisites...")
 	if out := checkPrerequisites(); out.HasError() {
 		fmt.Println(out.ToString(mod))
 		return

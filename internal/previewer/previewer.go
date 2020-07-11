@@ -1,6 +1,7 @@
 package previewer
 
 import (
+	"fmt"
 	"sync"
 
 	"github.com/schollz/progressbar/v3"
@@ -41,13 +42,14 @@ func (hnd Preview) Preview(pth string) output.Output {
 	bar := progressbar.Default(100)
 
 	hnd.dwnHnd.CleanTemporaryData()
+	fmt.Println("Analyzing dependencies...")
 	hnd.addProgress(bar, 5)
 
 	if pthOut := hnd.updateProjectPath(pth); pthOut.HasError() {
 		return pthOut
 	}
 
-	mds, mdsOut := hnd.mdHnd.ListAvailable(true, true)
+	mds, mdsOut := hnd.mdHnd.ListAvailable(false, true)
 	if mdsOut.HasError() {
 		return mdsOut
 	}
@@ -57,7 +59,7 @@ func (hnd Preview) Preview(pth string) output.Output {
 	}
 	hnd.addProgress(bar, 5)
 
-	if clsOut := hnd.cmpHnd.InitializeClassifiers(); out.HasError() {
+	if clsOut := hnd.cmpHnd.InitializeClassifiers(); clsOut.HasError() {
 		return clsOut
 	}
 
@@ -73,6 +75,9 @@ func (hnd Preview) addProgress(bar *progressbar.ProgressBar, num int) {
 func (hnd Preview) analyzeModuleGoroutine(md *module.Module, wg *sync.WaitGroup, bar *progressbar.ProgressBar, each int) {
 	dfs, dfsOut := hnd.cmpHnd.AnalyzeUpdateDifferences(*md)
 	if dfsOut.HasError() {
+		if dfsOut.IsToManyRequests() {
+			hnd.lgr.Fatal(dfsOut.String())
+		}
 		hnd.lgr.Debug(dfsOut.String())
 	}
 

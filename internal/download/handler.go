@@ -31,6 +31,7 @@ type Handler interface {
 	CleanTemporaryData()
 	DownloadModule(mdPth string) (string, output.Output)
 	FolderAccessible(pth string) bool
+	GitDownload(mdPth string) (string, output.Output)
 }
 
 type details struct {
@@ -75,7 +76,7 @@ func (hnd handler) DownloadModule(mdPth string) (string, output.Output) {
 	dir, dirOut := hnd.modDownload(mdPth)
 	if dirOut.HasError() {
 		if dirOut.ErrorContainsString(modDownloadError) {
-			return hnd.gitDownload(mdPth)
+			return hnd.GitDownload(mdPth)
 		}
 		return "", dirOut
 	}
@@ -98,14 +99,8 @@ func (hnd handler) FolderAccessible(pth string) bool {
 	return true
 }
 
-func (hnd handler) cleanVersion(vr string) string {
-	if strings.Contains(vr, "+") {
-		return strings.ReplaceAll(vr, "+", "_")
-	}
-	return vr
-}
-
-func (hnd handler) gitDownload(mdPth string) (string, output.Output) {
+//GitDownload downloads project with Git
+func (hnd handler) GitDownload(mdPth string) (string, output.Output) {
 	out := output.Create(pkg + ".gitDownload")
 
 	dt, err := hnd.transformModulePath(mdPth)
@@ -141,6 +136,13 @@ func (hnd handler) gitDownload(mdPth string) (string, output.Output) {
 		return "", out.WithError(err)
 	}
 	return dt.tempDir, out
+}
+
+func (hnd handler) cleanVersion(vr string) string {
+	if strings.Contains(vr, "+") {
+		return strings.ReplaceAll(vr, "+", "_")
+	}
+	return vr
 }
 
 func (hnd handler) modDownload(mdPth string) (string, output.Output) {

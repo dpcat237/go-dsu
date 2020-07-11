@@ -3,6 +3,7 @@ package output
 import (
 	"errors"
 	"fmt"
+	"net/http"
 	"strings"
 )
 
@@ -11,6 +12,7 @@ type Output struct {
 	error    error
 	method   string
 	response string
+	status   uint16
 }
 
 //Create creates Output object
@@ -30,9 +32,19 @@ func (out Output) GetError() error {
 	return out.error
 }
 
+//GetStatus returns an status code from Output
+func (out Output) GetStatus() int {
+	return int(out.status)
+}
+
 //HasError check if Output has an error
 func (out Output) HasError() bool {
 	return out.error != nil
+}
+
+//IsToManyRequests check if error was caused by to many requests
+func (out Output) IsToManyRequests() bool {
+	return out.status == http.StatusTooManyRequests
 }
 
 // String returns Output as string wrapping method and error
@@ -67,5 +79,11 @@ func (out Output) WithErrorString(msg string) Output {
 //WithResponse adds response message to Output and returns same Output
 func (out Output) WithResponse(rsp string) Output {
 	out.response = rsp
+	return out
+}
+
+//WithStatus adds response status code to Output and returns same Output
+func (out Output) WithStatus(sts int) Output {
+	out.status = uint16(sts)
 	return out
 }
