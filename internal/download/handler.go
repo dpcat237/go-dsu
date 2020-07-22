@@ -14,14 +14,16 @@ import (
 	"github.com/dpcat237/go-dsu/internal/logger"
 	"github.com/dpcat237/go-dsu/internal/module"
 	"github.com/dpcat237/go-dsu/internal/output"
+	"github.com/dpcat237/go-dsu/internal/version"
 )
 
 const (
-	baseTmpFolder    = "go-dsu"
-	cmdChmodModule   = "(chmod 744 %s && chmod 655 %s/*)"
-	cmdModDownload   = "go mod download -json"
-	modDownloadError = "not a known dependency"
-	cmdPermissions   = "(cd %s && go list -m -mod=mod -json)"
+	baseTmpFolder     = "go-dsu"
+	cmdChmodModule    = "(chmod 744 %s && chmod 655 %s/*)"
+	cmdModDownload    = "go mod download -json"
+	modDownloadError  = "not a known dependency"
+	cmdPermissions    = "(cd %s && go list -m -mod=mod -json)"
+	cmdPermissionsMod = "(cd %s && go list -m -json)"
 
 	pkg = "download"
 )
@@ -93,7 +95,12 @@ func (hnd handler) FolderAccessible(pth string) bool {
 		return false
 	}
 
-	if _, out := hnd.exc.ExecGlobal(fmt.Sprintf(cmdPermissions, pth)); out.HasError() {
+	cmdStr := cmdPermissionsMod
+	if !version.IsModSupported() {
+		cmdStr = cmdPermissions
+	}
+
+	if _, out := hnd.exc.ExecGlobal(fmt.Sprintf(cmdStr, pth)); out.HasError() {
 		return false
 	}
 	return true

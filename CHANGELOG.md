@@ -1,3 +1,8 @@
+# v0.9.1 (2020.07.22)
+
+#### Fixes
+- Use -mod=mod only in Go version >= 1.14
+
 # v0.9.0 (2020.07.11)
 
 #### Features
