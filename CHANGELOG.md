@@ -1,6 +1,7 @@
 # v0.9.1 (2020.07.22)
 
 #### Fixes
+- Improve cmd error detection
 - Use -mod=mod only in Go version >= 1.14
 
 # v0.9.0 (2020.07.11)
