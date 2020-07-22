@@ -4,6 +4,7 @@ import "strings"
 
 const (
 	escapeGoDownload = "go: downloading"
+	escapeGoFinding  = "go: finding"
 )
 
 //Response contains information returned from CLI command
@@ -14,7 +15,7 @@ type Response struct {
 
 //HasError checks if Response has an error
 func (rsp Response) HasError() bool {
-	return len(rsp.StdError) > 0 && !strings.Contains(string(rsp.StdError), escapeGoDownload)
+	return len(rsp.StdError) > 0 && !rsp.hasFalsePositive()
 }
 
 //IsEmpty checks if Response's output is empty
@@ -30,4 +31,9 @@ func (rsp Response) StdErrorString() string {
 //StdOutputString returns STD out as a string
 func (rsp Response) StdOutputString() string {
 	return string(rsp.StdOutput)
+}
+
+//hasFalsePositive check that STD error doesn't have not error messages
+func (rsp Response) hasFalsePositive() bool {
+	return strings.Contains(string(rsp.StdError), escapeGoDownload) || strings.Contains(string(rsp.StdError), escapeGoFinding)
 }
