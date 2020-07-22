@@ -11,11 +11,12 @@ const (
 type Response struct {
 	StdOutput []byte
 	StdError  []byte
+	Success   bool
 }
 
 //HasError checks if Response has an error
 func (rsp Response) HasError() bool {
-	return len(rsp.StdError) > 0 && !rsp.hasFalsePositive()
+	return !rsp.Success && len(rsp.StdError) > 0 && !rsp.hasFalsePositive()
 }
 
 //IsEmpty checks if Response's output is empty

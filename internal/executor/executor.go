@@ -56,6 +56,7 @@ func (exc Executor) ExecGlobal(cmdStr string) (Response, output.Output) {
 	}
 	rsp.StdOutput = cmdOut.Bytes()
 	rsp.StdError = cmdErr.Bytes()
+	rsp.Success = cmd.ProcessState.Success()
 
 	return rsp, out
 }
@@ -75,8 +76,10 @@ func (exc Executor) ExecProject(atr string) (Response, output.Output) {
 	if err := cmd.Run(); err != nil {
 		return rsp, out.WithErrorString(fmt.Sprintf("Error executing %s with output: %s%s", cmdStr, cmdErr.Bytes(), cmdOut.Bytes()))
 	}
+
 	rsp.StdOutput = cmdOut.Bytes()
 	rsp.StdError = cmdErr.Bytes()
+	rsp.Success = cmd.ProcessState.Success()
 
 	return rsp, out
 }
